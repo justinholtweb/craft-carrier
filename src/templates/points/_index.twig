@@ -1,0 +1,62 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Pickup points'|t('carrier') %}
+{% set selectedSubnavItem = 'points' %}
+
+{% block content %}
+    {% import '_includes/forms' as forms %}
+
+    <form method="get" class="flex" style="gap: 8px; margin-bottom: 16px;">
+        <div class="select"><select name="connection">
+            <option value="">{{ 'Every connection'|t('carrier') }}</option>
+            {% for c in connections %}<option value="{{ c.id }}" {% if connectionId == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </select></div>
+        <input class="text" type="search" name="q" value="{{ search }}" placeholder="{{ 'Name, city, postcode or id'|t('carrier') }}">
+        <button class="btn">{{ 'Filter'|t('carrier') }}</button>
+    </form>
+
+    {% if points is empty %}
+        <div class="zilch"><p>{{ 'No pickup points stored. Carriers that publish a list sync daily; for one that does not (DPD EasyShip), import a CSV below.'|t('carrier') }}</p></div>
+    {% else %}
+        <table class="data fullwidth">
+            <thead><tr>
+                <th>{{ 'Name'|t('carrier') }}</th><th>{{ 'Id'|t('carrier') }}</th><th>{{ 'Type'|t('carrier') }}</th>
+                <th>{{ 'Address'|t('carrier') }}</th><th>{{ 'Source'|t('carrier') }}</th><th>{{ 'Offered'|t('carrier') }}</th>
+            </tr></thead>
+            <tbody>
+                {% for point in points %}
+                    <tr>
+                        <td>{{ point.name }}</td>
+                        <td class="code">{{ point.pointId }}</td>
+                        <td>{{ point.type }}</td>
+                        <td>{{ point.street }}, {{ point.postcode }} {{ point.city }}, {{ point.countryCode }}</td>
+                        <td class="light">{{ point.source }}</td>
+                        <td>
+                            <form method="post">{{ csrfInput() }}{{ actionInput('carrier/points/toggle') }}{{ hiddenInput('id', point.id) }}{{ hiddenInput('enabled', point.enabled ? '' : '1') }}{{ redirectInput(craft.app.request.url) }}
+                                <button class="btn small">{{ point.enabled ? 'Hide'|t('carrier') : 'Offer'|t('carrier') }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="light">{{ '{total} points'|t('carrier', { total: total }) }}
+            {% if page > 1 %}· <a href="{{ url('carrier/points', craft.app.request.queryParams|merge({ page: page - 1 })) }}">← {{ 'Previous'|t('carrier') }}</a>{% endif %}
+            {% if page < pages %}· <a href="{{ url('carrier/points', craft.app.request.queryParams|merge({ page: page + 1 })) }}">{{ 'Next'|t('carrier') }} →</a>{% endif %}
+        </p>
+    {% endif %}
+
+    {% if connections %}
+        <hr>
+        <h2>{{ 'Import from CSV'|t('carrier') }}</h2>
+        <p class="light">{{ 'Columns by header name: id, name, type (locker/shop/postOffice/store), street, city, postcode, country, latitude, longitude, hours, cod. Imported points are never overwritten by a sync.'|t('carrier') }}</p>
+        <form method="post" enctype="multipart/form-data">
+            {{ csrfInput() }}{{ actionInput('carrier/points/import') }}{{ redirectInput('carrier/points') }}
+            {% set options = [] %}
+            {% for c in connections %}{% set options = options|merge([{ label: c.name, value: c.id }]) %}{% endfor %}
+            {{ forms.selectField({ label: 'Connection'|t('carrier'), name: 'connectionId', options: options, value: connectionId }) }}
+            {{ forms.field({ label: 'CSV file'|t('carrier') }, '<input type="file" name="csv" accept=".csv,text/csv" required>') }}
+            {{ forms.checkboxField({ label: 'Replace the points imported before'|t('carrier'), name: 'replace', value: '1' }) }}
+            <button class="btn submit">{{ 'Import'|t('carrier') }}</button>
+        </form>
+    {% endif %}
+{% endblock %}

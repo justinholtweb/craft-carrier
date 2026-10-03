@@ -1,0 +1,59 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Checkout methods'|t('carrier') %}
+{% set selectedSubnavItem = 'methods' %}
+
+{% block actionButton %}
+    {% if connections %}
+        <a href="{{ url('carrier/methods/new') }}" class="btn submit add icon">{{ 'New method'|t('carrier') }}</a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if not connections %}
+        <div class="zilch"><p>{{ 'Add a carrier connection first.'|t('carrier') }} <a href="{{ url('carrier/connections/new') }}">{{ 'New connection'|t('carrier') }}</a></p></div>
+    {% elseif methods is empty %}
+        <div class="zilch"><p>{{ 'No checkout methods yet. A method is what the customer picks at checkout: “GLS to your door”, “BOX NOW locker”, “UPS Ground”.'|t('carrier') }}</p></div>
+    {% else %}
+        <table class="data fullwidth" id="carrier-methods">
+            <thead>
+                <tr>
+                    <th scope="col">{{ 'Name'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Connection'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Service'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Pricing'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Pickup point'|t('carrier') }}</th>
+                    <td class="thin"></td>
+                    <td class="thin"></td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for method in methods %}
+                    {% set connection = connections[method.connectionId] ?? null %}
+                    <tr data-id="{{ method.id }}" data-name="{{ method.name }}">
+                        <th scope="row">
+                            <span class="status {{ method.enabled ? 'enabled' : 'disabled' }}"></span>
+                            <a href="{{ method.getCpEditUrl() }}">{{ method.name }}</a>
+                            <div class="light code smalltext">{{ method.getShippingMethodHandle() }}</div>
+                        </th>
+                        <td>{{ connection ? connection.name : '—' }}</td>
+                        <td class="code">{{ method.serviceCode ?: '—' }}</td>
+                        <td>{{ {live: 'Live rate'|t('carrier'), flat: 'Flat'|t('carrier'), table: 'Weight table'|t('carrier')}[method.pricingMode()] ?? method.pricingMode() }}</td>
+                        <td>{{ method.requiresPoint ? 'Yes'|t('carrier') : '' }}</td>
+                        <td class="thin"><a class="move icon" title="{{ 'Reorder'|t('carrier') }}" role="button"></a></td>
+                        <td class="thin"><a class="delete icon" title="{{ 'Delete'|t('carrier') }}" role="button"></a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}
+
+{% js %}
+    new Craft.AdminTable({
+        tableSelector: '#carrier-methods',
+        sortable: true,
+        reorderAction: 'carrier/methods/reorder',
+        deleteAction: 'carrier/methods/delete',
+        noItemsSelector: '.zilch'
+    });
+{% endjs %}

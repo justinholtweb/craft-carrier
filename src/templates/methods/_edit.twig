@@ -1,0 +1,174 @@
+{% extends '_layouts/cp' %}
+{% set title = method.id ? method.name : 'New checkout method'|t('carrier') %}
+{% set selectedSubnavItem = 'methods' %}
+{% set fullPageForm = true %}
+{% set crumbs = [{ label: 'Checkout methods'|t('carrier'), url: url('carrier/methods') }] %}
+
+{% block content %}
+    {% import '_includes/forms' as forms %}
+
+    {{ actionInput('carrier/methods/save') }}
+    {{ redirectInput('carrier/methods') }}
+    {{ hiddenInput('methodId', method.id) }}
+
+    {% set connectionOptions = [{ label: 'Choose…'|t('carrier'), value: '' }] %}
+    {% for connection in connections %}
+        {% set connectionOptions = connectionOptions|merge([{ label: connection.name ~ ' (' ~ connection.getCarrierName() ~ ')', value: connection.id }]) %}
+    {% endfor %}
+
+    {{ forms.textField({ first: true, label: 'Name'|t('carrier'), instructions: 'What the customer sees at checkout.'|t('carrier'), id: 'name', name: 'name', value: method.name, required: true, errors: method.getErrors('name') }) }}
+    {{ forms.textField({ label: 'Handle'|t('carrier'), instructions: 'Commerce stores this on the order as “carrier-{handle}”.'|t('carrier'), id: 'handle', name: 'handle', class: 'code', value: method.handle, required: true, errors: method.getErrors('handle') }) }}
+    {{ forms.lightswitchField({ label: 'Enabled'|t('carrier'), id: 'enabled', name: 'enabled', on: method.id ? method.enabled : true }) }}
+
+    {% if stores|length > 1 %}
+        {{ forms.selectField({ label: 'Store'|t('carrier'), id: 'storeId', name: 'storeId', options: [{ label: 'All stores'|t('carrier'), value: '' }]|merge(stores), value: method.storeId }) }}
+    {% endif %}
+
+    {{ forms.selectField({ label: 'Connection'|t('carrier'), instructions: 'Which carrier account ships this method.'|t('carrier'), id: 'connectionId', name: 'connectionId', options: connectionOptions, value: method.connectionId, required: true, errors: method.getErrors('connectionId') }) }}
+
+    {# Services per connection, so switching the connection swaps the list without a reload. #}
+    {% for connectionId, carrier in carriers %}
+        {% set serviceOptions = [] %}
+        {% for code, service in carrier.services %}
+            {% set serviceOptions = serviceOptions|merge([{ label: service.name ~ (service.points ? ' — ' ~ 'pickup point'|t('carrier') : ''), value: code }]) %}
+        {% endfor %}
+        <div class="carrier-services" data-connection="{{ connectionId }}" {% if method.connectionId != connectionId %}hidden{% endif %}>
+            {{ forms.selectField({
+                label: 'Service'|t('carrier'),
+                id: 'serviceCode-' ~ connectionId,
+                name: method.connectionId == connectionId ? 'serviceCode' : '',
+                options: serviceOptions,
+                value: method.serviceCode
+            }) }}
+            <p class="light smalltext">{{ carrier.name }}: {{ carrier.featureLabels|join(', ') }}</p>
+        </div>
+    {% endfor %}
+
+    {{ forms.lightswitchField({
+        label: 'Delivers to a pickup point'|t('carrier'),
+        instructions: 'The customer chooses a locker, parcel shop or store at checkout, and cannot pay until they have.'|t('carrier'),
+        id: 'requiresPoint', name: 'requiresPoint', on: method.requiresPoint,
+        errors: method.getErrors('requiresPoint')
+    }) }}
+
+    <hr>
+    <h2>{{ 'Price'|t('carrier') }}</h2>
+    {% set pricing = method.pricing %}
+    {{ forms.selectField({
+        label: 'How the price is worked out'|t('carrier'),
+        id: 'pricing-mode', name: 'pricing[mode]',
+        options: [
+            { label: 'Flat price'|t('carrier'), value: 'flat' },
+            { label: 'Weight table'|t('carrier'), value: 'table' },
+            { label: 'Live rate from the carrier'|t('carrier'), value: 'live' },
+        ],
+        value: method.pricingMode(),
+        errors: method.getErrors('pricing'),
+        toggle: true,
+        targetPrefix: 'pricing-'
+    }) }}
+
+    <div id="pricing-flat" {% if method.pricingMode() != 'flat' %}class="hidden"{% endif %}>
+        {{ forms.textField({ label: 'Price ({currency})'|t('carrier', { currency: currency }), id: 'flatRate', name: 'pricing[flatRate]', type: 'number', step: 'any', value: pricing.flatRate ?? '' }) }}
+    </div>
+
+    <div id="pricing-table" {% if method.pricingMode() != 'table' %}class="hidden"{% endif %}>
+        {{ forms.editableTableField({
+            label: 'Weight table'|t('carrier'),
+            instructions: 'The first row whose weight is not exceeded sets the price. Heavier than the last row: the method is not offered.'|t('carrier'),
+            id: 'pricing-table-rows', name: 'pricing[table]',
+            cols: {
+                maxWeight: { heading: 'Up to ({unit})'|t('carrier', { unit: weightUnit }), type: 'number' },
+                price: { heading: 'Price ({currency})'|t('carrier', { currency: currency }), type: 'number' },
+            },
+            rows: pricing.table ?? [],
+            allowAdd: true, allowDelete: true, allowReorder: true
+        }) }}
+    </div>
+
+    <div id="pricing-live" {% if method.pricingMode() != 'live' %}class="hidden"{% endif %}>
+        {{ forms.textField({ label: 'Markup (%)'|t('carrier'), id: 'markupPercent', name: 'pricing[markupPercent]', type: 'number', step: 'any', value: pricing.markupPercent ?? '' }) }}
+        {{ forms.textField({ label: 'Markup ({currency})'|t('carrier', { currency: currency }), id: 'markupFixed', name: 'pricing[markupFixed]', type: 'number', step: 'any', value: pricing.markupFixed ?? '' }) }}
+        {{ forms.textField({
+            label: 'Fallback price ({currency})'|t('carrier', { currency: currency }),
+            instructions: 'Charged when the carrier cannot be reached. Leave blank to hide the method instead.'|t('carrier'),
+            id: 'fallbackRate', name: 'pricing[fallbackRate]', type: 'number', step: 'any', value: pricing.fallbackRate ?? ''
+        }) }}
+    </div>
+
+    {{ forms.textField({ label: 'Free over ({currency})'|t('carrier', { currency: currency }), instructions: 'Item subtotal at which this method becomes free. Blank for never.'|t('carrier'), id: 'freeOver', name: 'pricing[freeOver]', type: 'number', step: 'any', value: pricing.freeOver ?? '' }) }}
+    {{ forms.textField({ label: 'Round up to'|t('carrier'), instructions: 'e.g. 0.5 to always charge in halves. Blank for no rounding.'|t('carrier'), id: 'roundUpTo', name: 'pricing[roundUpTo]', type: 'number', step: 'any', value: pricing.roundUpTo ?? '' }) }}
+
+    <hr>
+    <h2>{{ 'When it is offered'|t('carrier') }}</h2>
+    {% set conditions = method.conditions %}
+    {{ forms.textField({ label: 'Only to countries'|t('carrier'), instructions: 'Comma-separated codes, e.g. “HR, SI”. Blank for anywhere.'|t('carrier'), id: 'countries', name: 'conditions[countries]', class: 'code', value: (conditions.countries ?? [])|join(', ') }) }}
+    {{ forms.textField({ label: 'Never to countries'|t('carrier'), id: 'excludeCountries', name: 'conditions[excludeCountries]', class: 'code', value: (conditions.excludeCountries ?? [])|join(', ') }) }}
+    <div class="flex" style="gap: 12px;">
+        {{ forms.textField({ label: 'Min weight ({unit})'|t('carrier', { unit: weightUnit }), id: 'minWeight', name: 'conditions[minWeight]', type: 'number', step: 'any', value: conditions.minWeight ?? '' }) }}
+        {{ forms.textField({ label: 'Max weight ({unit})'|t('carrier', { unit: weightUnit }), id: 'maxWeight', name: 'conditions[maxWeight]', type: 'number', step: 'any', value: conditions.maxWeight ?? '' }) }}
+        {{ forms.textField({ label: 'Min subtotal'|t('carrier'), id: 'minSubtotal', name: 'conditions[minSubtotal]', type: 'number', step: 'any', value: conditions.minSubtotal ?? '' }) }}
+        {{ forms.textField({ label: 'Max subtotal'|t('carrier'), id: 'maxSubtotal', name: 'conditions[maxSubtotal]', type: 'number', step: 'any', value: conditions.maxSubtotal ?? '' }) }}
+    </div>
+
+    <hr>
+    {{ forms.selectField({
+        label: 'Packing'|t('carrier'),
+        id: 'packing-strategy', name: 'packing[strategy]',
+        options: [
+            { label: 'Use the plugin setting'|t('carrier'), value: '' },
+            { label: 'Everything in one parcel'|t('carrier'), value: 'single' },
+            { label: 'One parcel per item'|t('carrier'), value: 'perItem' },
+            { label: 'Pack into boxes'|t('carrier'), value: 'boxes' },
+        ],
+        value: method.packing.strategy ?? ''
+    }) }}
+
+    {# Extras and freight defaults, per connection, shown only for carriers that use them. #}
+    {% for connectionId, carrier in carriers %}
+        {% set accessorialOptions = [] %}
+        {% for code in carrier.capabilities.accessorials %}
+            {% set accessorialOptions = accessorialOptions|merge([{ label: accessorialLabels[code] ?? code, value: code }]) %}
+        {% endfor %}
+        <div class="carrier-extras" data-connection="{{ connectionId }}" {% if method.connectionId != connectionId %}hidden{% endif %}>
+            {% if accessorialOptions %}
+                {{ forms.checkboxSelectField({
+                    label: 'Always add'|t('carrier'),
+                    instructions: 'Extras every shipment on this method is booked with. Only what this carrier understands is listed.'|t('carrier'),
+                    id: 'accessorials-' ~ connectionId,
+                    name: 'packing[accessorials]',
+                    options: accessorialOptions,
+                    values: method.packing.accessorials ?? []
+                }) }}
+            {% endif %}
+            {% if 'freight' in carrier.features %}
+                {{ forms.textField({ label: 'Freight class'|t('carrier'), instructions: 'NMFC class for every handling unit, e.g. 70 or 92.5.'|t('carrier'), id: 'freightClass-' ~ connectionId, name: 'packing[freightClass]', class: 'code', value: method.packing.freightClass ?? '', size: 6 }) }}
+                {{ forms.selectField({ label: 'Handling unit'|t('carrier'), id: 'packagingType-' ~ connectionId, name: 'packing[packagingType]', options: [
+                    { label: 'Pallet'|t('carrier'), value: 'pallet' }, { label: 'Crate'|t('carrier'), value: 'crate' },
+                    { label: 'Carton'|t('carrier'), value: 'carton' }, { label: 'Drum'|t('carrier'), value: 'drum' },
+                ], value: method.packing.packagingType ?? 'pallet' }) }}
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endblock %}
+
+{% js %}
+// Every connection's extras are in the form; only the chosen one's inputs are enabled, because a
+// disabled input is never posted.
+function syncExtras(id) {
+    document.querySelectorAll('.carrier-extras').forEach((el) => {
+        const on = el.dataset.connection === String(id);
+        el.hidden = !on;
+        el.querySelectorAll('input, select').forEach((input) => { input.disabled = !on; });
+    });
+}
+syncExtras(document.getElementById('connectionId').value);
+document.getElementById('connectionId').addEventListener('change', (e) => {
+    document.querySelectorAll('.carrier-services').forEach((el) => {
+        const on = el.dataset.connection === e.target.value;
+        el.hidden = !on;
+        el.querySelector('select').name = on ? 'serviceCode' : '';
+    });
+    syncExtras(e.target.value);
+});
+{% endjs %}

@@ -1,0 +1,69 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Shipments'|t('carrier') %}
+{% set selectedSubnavItem = 'shipments' %}
+
+{% block content %}
+    <form method="get" class="flex" style="gap: 8px; margin-bottom: 16px;">
+        <input class="text" type="search" name="q" value="{{ filters.search }}" placeholder="{{ 'Order reference or tracking number'|t('carrier') }}" size="30">
+        <div class="select"><select name="status">
+            <option value="">{{ 'Any status'|t('carrier') }}</option>
+            {% for value, label in { labelled: 'Labelled'|t('carrier'), failed: 'Refused'|t('carrier'), uncertain: 'Check with carrier'|t('carrier'), purchasing: 'Buying label'|t('carrier'), voided: 'Voided'|t('carrier') } %}
+                <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select></div>
+        <div class="select"><select name="tracking">
+            <option value="">{{ 'Any tracking status'|t('carrier') }}</option>
+            {% for value, label in trackingStatuses %}<option value="{{ value }}" {% if filters.tracking == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select></div>
+        <div class="select"><select name="connection">
+            <option value="">{{ 'Any connection'|t('carrier') }}</option>
+            {% for c in connections %}<option value="{{ c.id }}" {% if filters.connectionId == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+        </select></div>
+        <button class="btn">{{ 'Filter'|t('carrier') }}</button>
+    </form>
+
+    {% if shipments is empty %}
+        <div class="zilch"><p>{{ 'No shipments yet. Create labels from an order, or with “Create shipping labels” on the order index.'|t('carrier') }}</p></div>
+    {% else %}
+        <form method="get" action="{{ actionUrl('carrier/shipments/print') }}" target="_blank" id="carrier-print-form">
+        <table class="data fullwidth">
+            <thead><tr>
+                <td class="thin"><input type="checkbox" onclick="document.querySelectorAll('.carrier-pick').forEach(c => c.checked = this.checked)"></td>
+                <th>{{ 'Order'|t('carrier') }}</th>
+                <th>{{ 'Carrier'|t('carrier') }}</th>
+                <th>{{ 'Tracking'|t('carrier') }}</th>
+                <th>{{ 'Status'|t('carrier') }}</th>
+                <th>{{ 'Created'|t('carrier') }}</th>
+            </tr></thead>
+            <tbody>
+                {% for shipment in shipments %}
+                    {% set order = orders[shipment.orderId] ?? null %}
+                    <tr>
+                        <td class="thin">{% if shipment.status == 'labelled' %}<input type="checkbox" class="carrier-pick" value="{{ shipment.id }}">{% endif %}</td>
+                        <td>{% if order %}<a href="{{ url('carrier/orders/' ~ order.id) }}">{{ order.reference ?: order.shortNumber }}</a>{% else %}<span class="light">{{ 'Deleted order'|t('carrier') }}</span>{% endif %}</td>
+                        <td>{{ shipment.getCarrierName() }} <span class="light">{{ shipment.serviceName }}</span>{% if shipment.isReturn %} <span class="badge">{{ 'Return'|t('carrier') }}</span>{% endif %}</td>
+                        <td>
+                            {% if shipment.trackingNumber %}
+                                {% if shipment.getTrackingUrl() %}<a href="{{ shipment.getTrackingUrl() }}" target="_blank" rel="noopener" class="code">{{ shipment.trackingNumber }}</a>{% else %}<code>{{ shipment.trackingNumber }}</code>{% endif %}
+                                <div><span class="status {{ craft.carrier.statusColor(shipment.trackingStatus) }}"></span>{{ shipment.getTrackingStatusLabel() }}</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ shipment.getStatusLabel() }}{% if shipment.error and shipment.status != 'labelled' %}<div class="error smalltext">{{ shipment.error|slice(0, 120) }}{% if shipment.data.partialTrackingNumbers ?? false %} — {{ shipment.data.partialTrackingNumbers|join(", ") }}{% endif %}</div>{% endif %}</td>
+                        <td>{{ shipment.dateCreated|datetime('short') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <input type="hidden" name="shipmentIds" id="carrier-print-ids">
+        <p><button class="btn" onclick="document.getElementById('carrier-print-ids').value = [...document.querySelectorAll('.carrier-pick:checked')].map(c => c.value).join(',');">{{ 'Print selected labels'|t('carrier') }}</button></p>
+        </form>
+
+        {% if pages > 1 %}
+            <p class="light">
+                {% if page > 1 %}<a href="{{ url('carrier/shipments', craft.app.request.queryParams|merge({ page: page - 1 })) }}">← {{ 'Previous'|t('carrier') }}</a>{% endif %}
+                {{ 'Page {page} of {pages} ({total} shipments)'|t('carrier', { page: page, pages: pages, total: total }) }}
+                {% if page < pages %}<a href="{{ url('carrier/shipments', craft.app.request.queryParams|merge({ page: page + 1 })) }}">{{ 'Next'|t('carrier') }} →</a>{% endif %}
+            </p>
+        {% endif %}
+    {% endif %}
+{% endblock %}

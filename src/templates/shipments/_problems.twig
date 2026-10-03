@@ -1,0 +1,47 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Problems'|t('carrier') %}
+{% set selectedSubnavItem = 'problems' %}
+
+{% block content %}
+    <div class="readable">
+        <p>{{ 'Labels the carrier refused, and purchases nobody can be sure about. Carrier never buys a label twice on its own: an interrupted or unanswered purchase waits here until someone checks the carrier’s portal.'|t('carrier') }}</p>
+    </div>
+
+    {% if shipments is empty %}
+        <div class="zilch"><p>{{ 'Nothing needs attention.'|t('carrier') }}</p></div>
+    {% else %}
+        <table class="data fullwidth">
+            <thead><tr>
+                <th>{{ 'Order'|t('carrier') }}</th>
+                <th>{{ 'Carrier'|t('carrier') }}</th>
+                <th>{{ 'What happened'|t('carrier') }}</th>
+                <th>{{ 'When'|t('carrier') }}</th>
+                <th></th>
+            </tr></thead>
+            <tbody>
+                {% for shipment in shipments %}
+                    {% set order = orders[shipment.orderId] ?? null %}
+                    <tr>
+                        <td>{% if order %}<a href="{{ url('carrier/orders/' ~ order.id) }}">{{ order.reference ?: order.shortNumber }}</a>{% endif %}</td>
+                        <td>{{ shipment.getCarrierName() }}</td>
+                        <td>
+                            <strong>{{ shipment.getStatusLabel() }}</strong>
+                            <div class="smalltext">{{ shipment.status == 'purchasing' ? 'The purchase was interrupted. The carrier may have created the label.'|t('carrier') : shipment.error }}</div>{% if shipment.data.partialTrackingNumbers ?? false %}<div class="smalltext code">{{ 'Already created: {list}'|t('carrier', { list: shipment.data.partialTrackingNumbers|join(', ') }) }}</div>{% endif %}
+                        </td>
+                        <td class="nowrap">{{ shipment.dateCreated|timestamp }}</td>
+                        <td>
+                            {% if shipment.status == 'failed' %}
+                                {% if canCreate %}
+                                    <form method="post">{{ csrfInput() }}{{ actionInput('carrier/shipments/retry') }}{{ hiddenInput('shipmentId', shipment.id) }}{{ redirectInput('carrier/problems') }}
+                                        <button class="btn small">{{ 'Try again'|t('carrier') }}</button></form>
+                                {% endif %}
+                            {% elseif canResolve %}
+                                {% include 'carrier/shipments/_resolve' with { shipment: shipment } only %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

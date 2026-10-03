@@ -1,0 +1,78 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Connections'|t('carrier') %}
+{% set selectedSubnavItem = 'connections' %}
+
+{% block actionButton %}
+    <a href="{{ url('carrier/connections/new') }}" class="btn submit add icon">{{ 'New connection'|t('carrier') }}</a>
+{% endblock %}
+
+{% block content %}
+    {% if connections is empty %}
+        <div class="zilch">
+            <p>{{ 'No carrier accounts yet. Add one to start creating labels.'|t('carrier') }}</p>
+        </div>
+    {% else %}
+        <table class="data fullwidth" id="carrier-connections">
+            <thead>
+                <tr>
+                    <th scope="col">{{ 'Name'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Carrier'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Checkout methods'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Pickup points'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Status'|t('carrier') }}</th>
+                    <td class="thin"></td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for connection in connections %}
+                    {% set info = summary[connection.id] %}
+                    <tr data-id="{{ connection.id }}" data-name="{{ connection.name }}">
+                        <th scope="row">
+                            <a href="{{ connection.getCpEditUrl() }}">{{ connection.name }}</a>
+                            <div class="light code smalltext">{{ connection.handle }}</div>
+                        </th>
+                        <td>
+                            {% if info.carrier %}
+                                {{ info.carrier.name }}
+                            {% else %}
+                                <span class="error">{{ 'Add-on missing: {handle}'|t('carrier', { handle: connection.carrier }) }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ info.methods }}</td>
+                        <td>{{ info.points ?: '—' }}</td>
+                        <td>
+                            <span class="status {{ connection.enabled ? 'enabled' : 'disabled' }}"></span>
+                            {{ connection.enabled ? 'Enabled'|t('carrier') : 'Disabled'|t('carrier') }}
+                            {% if connection.isSandbox() %}<span class="badge">{{ 'Sandbox'|t('carrier') }}</span>{% endif %}
+                        </td>
+                        <td class="thin"><a class="delete icon" title="{{ 'Delete'|t('carrier') }}" role="button"></a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <hr>
+    <h2>{{ 'Installed carriers'|t('carrier') }}</h2>
+    <p class="light">{{ 'Each carrier is a free add-on plugin. Install the ones you ship with.'|t('carrier') }}</p>
+    {% for region, list in carriers %}
+        <h3>{{ region }}</h3>
+        <ul>
+            {% for carrier in list %}
+                <li>
+                    <a href="{{ url('carrier/connections/new', { carrier: carrier.handle }) }}">{{ carrier.name }}</a>
+                    <span class="light">— {{ carrier.featureLabels|join(', ') }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% endblock %}
+
+{% js %}
+    new Craft.AdminTable({
+        tableSelector: '#carrier-connections',
+        deleteAction: 'carrier/connections/delete',
+        confirmDeleteMessage: {{ 'Delete “{name}”? Its checkout methods and synced pickup points go with it. Shipments already made are kept.'|t('carrier')|json_encode|raw }},
+        noItemsSelector: '.zilch'
+    });
+{% endjs %}

@@ -1,0 +1,9 @@
+{% for shipment in shipments %}
+    <div>
+        {% if shipment.trackingNumber %}
+            <span class="status {{ craft.carrier.statusColor(shipment.trackingStatus) }}"></span>{{ shipment.getTrackingStatusLabel() }}
+        {% else %}
+            <span class="status red"></span>{{ shipment.getStatusLabel() }}
+        {% endif %}
+    </div>
+{% endfor %}

@@ -1,0 +1,272 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Shipping for order {ref}'|t('carrier', { ref: order.reference ?: order.shortNumber }) %}
+{% set selectedSubnavItem = 'shipments' %}
+{% set crumbs = [
+    { label: 'Shipments'|t('carrier'), url: url('carrier/shipments') },
+    { label: order.reference ?: order.shortNumber, url: order.cpEditUrl },
+] %}
+
+{% block content %}
+    {% import '_includes/forms' as forms %}
+    {% set address = order.shippingAddress %}
+
+    <div class="readable">
+        <p>
+            <strong>{{ address ? address.fullName ?: address.organization : 'No shipping address'|t('carrier') }}</strong><br>
+            {% if address %}{{ address.addressLine1 }} {{ address.addressLine2 }}, {{ address.postalCode }} {{ address.locality }}, {{ address.countryCode }}{% endif %}
+        </p>
+        <p class="light">
+            {{ 'Checkout method:'|t('carrier') }} {{ method ? method.name : (order.shippingMethodName ?: '—') }}
+            {% if selection %} · {{ 'Pickup point:'|t('carrier') }} <strong>{{ selection.getLabel() }}</strong> <code>{{ selection.pointId }}</code>{% endif %}
+            {% if isCod %} · <span class="badge">{{ 'Cash on delivery: {amount}'|t('carrier', { amount: order.outstandingBalance|commerceCurrency(order.currency) }) }}</span>{% endif %}
+        </p>
+    </div>
+
+    {% for shipment in shipments %}
+        {% set info = shipmentDetails[shipment.id] %}
+        <div class="pane" id="shipment-{{ shipment.id }}">
+            <div class="flex flex-nowrap" style="justify-content: space-between; align-items: baseline;">
+                <h2 style="margin: 0;">
+                    {{ shipment.getCarrierName() }}
+                    {% if shipment.serviceName %}<span class="light">— {{ shipment.serviceName }}</span>{% endif %}
+                    {% if shipment.isReturn %}<span class="badge">{{ 'Return'|t('carrier') }}</span>{% endif %}
+                </h2>
+                <span>
+                    <span class="status {{ shipment.status == 'labelled' ? 'green' : (shipment.status == 'voided' ? 'disabled' : 'red') }}"></span>{{ shipment.getStatusLabel() }}
+                </span>
+            </div>
+
+            {% if shipment.trackingNumber %}
+                <p>
+                    <code>{{ shipment.trackingNumber }}</code>
+                    {% if shipment.getTrackingUrl() %}<a href="{{ shipment.getTrackingUrl() }}" target="_blank" rel="noopener">{{ 'Track'|t('carrier') }} ↗</a>{% endif %}
+                    · <span class="status {{ craft.carrier.statusColor(shipment.trackingStatus) }}"></span>{{ shipment.getTrackingStatusLabel() }}
+                    {% if shipment.trackingStatusText and shipment.trackingStatusText != shipment.getTrackingStatusLabel() %}<span class="light">— {{ shipment.trackingStatusText }}</span>{% endif %}
+                </p>
+            {% endif %}
+
+            {% if shipment.error %}<p class="{{ shipment.status == 'labelled' ? 'warning' : 'error' }}">{{ shipment.error|nl2br }}</p>{% endif %}
+
+            <p class="light smalltext">
+                {% if shipment.charge is not null %}{{ 'Carrier charge: {amount}'|t('carrier', { amount: shipment.charge|commerceCurrency(shipment.currency ?: order.currency) }) }} · {% endif %}
+                {% if shipment.codAmount %}{{ 'COD {amount}'|t('carrier', { amount: shipment.codAmount|commerceCurrency(shipment.codCurrency ?: order.currency) }) }} · {% endif %}
+                {% if shipment.pointId %}{{ 'Point {id}'|t('carrier', { id: shipment.pointId }) }} · {% endif %}
+                {{ shipment.getParcels()|length }} {{ 'parcel(s)'|t('carrier') }}
+                · {{ shipment.dateCreated|datetime('short') }}
+            </p>
+
+            {% if info.labels %}
+                <p>
+                    {% for label in info.labels %}
+                        <a class="btn small" href="{{ actionUrl('carrier/shipments/label', { labelId: label.id }) }}" target="_blank">
+                            {{ label.kind == 'label' ? 'Label'|t('carrier') : label.kind|capitalize }} {{ label.trackingNumber }} ({{ label.format }})
+                        </a>
+                    {% endfor %}
+                    {% if shipment.status == 'labelled' %}
+                        <a class="btn small" href="{{ actionUrl('carrier/shipments/print', { shipmentIds: shipment.id }) }}" target="_blank">{{ 'Print all'|t('carrier') }}</a>
+                    {% endif %}
+                </p>
+            {% endif %}
+
+            <div class="flex" style="gap: 6px;">
+                {% if shipment.status == 'labelled' %}
+                    <form method="post">{{ csrfInput() }}{{ actionInput('carrier/shipments/refresh-tracking') }}{{ hiddenInput('shipmentId', shipment.id) }}{{ redirectInput(craft.app.request.pathInfo) }}
+                        <button class="btn small">{{ 'Refresh tracking'|t('carrier') }}</button></form>
+                    {% if 'reprint' in (info.capabilities.features ?? []) %}
+                        <form method="post">{{ csrfInput() }}{{ actionInput('carrier/shipments/reprint') }}{{ hiddenInput('shipmentId', shipment.id) }}{{ redirectInput(craft.app.request.pathInfo) }}
+                            <button class="btn small">{{ 'Fetch labels again'|t('carrier') }}</button></form>
+                    {% endif %}
+                    {% if canVoid %}
+                        {% if 'cancel' in (info.capabilities.features ?? []) %}
+                            <form method="post" onsubmit="return confirm({{ 'Void this label with the carrier?'|t('carrier')|json_encode }})">{{ csrfInput() }}{{ actionInput('carrier/shipments/void') }}{{ hiddenInput('shipmentId', shipment.id) }}{{ redirectInput(craft.app.request.pathInfo) }}
+                                <button class="btn small">{{ 'Void label'|t('carrier') }}</button></form>
+                        {% else %}
+                            <form method="post" onsubmit="return confirm({{ 'Mark voided here? Void it in the carrier’s portal too.'|t('carrier')|json_encode }})">{{ csrfInput() }}{{ actionInput('carrier/shipments/resolve') }}{{ hiddenInput('shipmentId', shipment.id) }}{{ hiddenInput('outcome', 'voided') }}{{ redirectInput(craft.app.request.pathInfo) }}
+                                <button class="btn small">{{ 'Mark voided'|t('carrier') }}</button></form>
+                        {% endif %}
+                    {% endif %}
+                {% elseif shipment.status == 'failed' and canCreate %}
+                    <form method="post">{{ csrfInput() }}{{ actionInput('carrier/shipments/retry') }}{{ hiddenInput('shipmentId', shipment.id) }}{{ redirectInput(craft.app.request.pathInfo) }}
+                        <button class="btn small">{{ 'Try again'|t('carrier') }}</button></form>
+                {% elseif shipment.needsAttention() and canVoid %}
+                    {% include 'carrier/shipments/_resolve' with { shipment: shipment } only %}
+                {% endif %}
+            </div>
+
+            {% if info.events %}
+                <details style="margin-top: 12px;">
+                    <summary>{{ 'Tracking history ({n})'|t('carrier', { n: info.events|length }) }}</summary>
+                    <table class="data fullwidth">
+                        {% for event in info.events %}
+                            <tr>
+                                <td class="nowrap">{{ event.occurredAt ? date(event.occurredAt ~ ' UTC')|datetime('short') : '' }}</td>
+                                <td>{{ craft.carrier.statusLabel(event.status) }}</td>
+                                <td>{{ event.description }}</td>
+                                <td class="light">{{ event.location }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </details>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    {% if canCreate and connections %}
+        <hr>
+        <h2>{{ shipments|filter(s => s.status == 'labelled')|length ? 'Ship more'|t('carrier') : 'Create a label'|t('carrier') }}</h2>
+
+        <div class="field">
+            <div class="heading"><label for="carrier-connection">{{ 'Connection'|t('carrier') }}</label></div>
+            <div class="select">
+                <select id="carrier-connection" onchange="window.location='{{ url('carrier/orders/' ~ order.id) }}?connection='+this.value">
+                    {% for c in connections %}<option value="{{ c.id }}" {% if c.id == connection.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+
+        {% set carrier = carriers[connection.id] %}
+        <form method="post" id="carrier-purchase">
+            {{ csrfInput() }}
+            {{ actionInput('carrier/shipments/purchase') }}
+            {{ hiddenInput('orderId', order.id) }}
+            {{ hiddenInput('connectionId', connection.id) }}
+            {{ hiddenInput('nonce', nonce) }}
+
+            {% set serviceOptions = [] %}
+            {% for code, service in carrier.services %}
+                {% set serviceOptions = serviceOptions|merge([{ label: service.name, value: code }]) %}
+            {% endfor %}
+            {% if serviceOptions %}
+                {{ forms.selectField({ label: 'Service'|t('carrier'), id: 'serviceCode', name: 'serviceCode', options: serviceOptions, value: method ? method.serviceCode : '' }) }}
+            {% endif %}
+
+            {% set formats = [] %}
+            {% for f in carrier.capabilities.labelFormats %}{% set formats = formats|merge([{ label: labelFormats[f] ?? f, value: f }]) %}{% endfor %}
+            {{ forms.selectField({ label: 'Label format'|t('carrier'), id: 'labelFormat', name: 'labelFormat', options: formats, value: connection.labelFormat }) }}
+
+            {% if 'points' in carrier.features %}
+                {{ forms.textField({ label: 'Pickup point id'|t('carrier'), instructions: 'Blank delivers to the address.'|t('carrier'), id: 'pointId', name: 'pointId', class: 'code', value: selection and selection.connectionId == connection.id ? selection.pointId : '' }) }}
+            {% endif %}
+
+            {% if carrier.capabilities.accessorials %}
+                {% set extras = [] %}
+                {% for code in carrier.capabilities.accessorials %}{% set extras = extras|merge([{ label: accessorialLabels[code] ?? code, value: code }]) %}{% endfor %}
+                {{ forms.checkboxSelectField({ label: 'Extras'|t('carrier'), id: 'accessorials', name: 'accessorials', options: extras, values: method ? method.accessorials() : [] }) }}
+            {% endif %}
+
+            {% if 'returns' in carrier.features %}
+                {{ forms.lightswitchField({ label: 'Return label'|t('carrier'), id: 'isReturn', name: 'isReturn' }) }}
+            {% endif %}
+
+            <h3>{{ 'Parcels'|t('carrier') }}</h3>
+            <table class="data fullwidth" id="carrier-parcels">
+                <thead><tr>
+                    <th>{{ 'Weight ({u})'|t('carrier', { u: weightUnit }) }}</th>
+                    <th>{{ 'Length ({u})'|t('carrier', { u: dimensionUnit }) }}</th>
+                    <th>{{ 'Width ({u})'|t('carrier', { u: dimensionUnit }) }}</th>
+                    <th>{{ 'Height ({u})'|t('carrier', { u: dimensionUnit }) }}</th>
+                    <th>{{ 'Box'|t('carrier') }}</th>
+                    {% if 'freight' in carrier.features %}<th>{{ 'Freight class'|t('carrier') }}</th>{% endif %}
+                    <th></th>
+                </tr></thead>
+                <tbody>
+                    {% for parcel in parcels %}
+                        <tr>
+                            <td><input class="text" type="number" step="any" min="0" name="parcels[{{ loop.index0 }}][weight]" value="{{ parcel.weight }}" size="8"></td>
+                            <td><input class="text" type="number" step="any" min="0" name="parcels[{{ loop.index0 }}][length]" value="{{ parcel.length }}" size="6"></td>
+                            <td><input class="text" type="number" step="any" min="0" name="parcels[{{ loop.index0 }}][width]" value="{{ parcel.width }}" size="6"></td>
+                            <td><input class="text" type="number" step="any" min="0" name="parcels[{{ loop.index0 }}][height]" value="{{ parcel.height }}" size="6"></td>
+                            <td><input class="text" type="text" name="parcels[{{ loop.index0 }}][box]" value="{{ parcel.box }}" size="10">
+                                <input type="hidden" name="parcels[{{ loop.index0 }}][items]" value="{{ parcel.items|json_encode }}"></td>
+                            {% if 'freight' in carrier.features %}<td><input class="text code" type="text" name="parcels[{{ loop.index0 }}][freightClass]" value="" size="5" placeholder="70"></td>{% endif %}
+                            <td class="thin"><a class="delete icon" role="button" onclick="this.closest('tr').remove()"></a></td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" class="light">{{ 'Nothing in this order is shippable.'|t('carrier') }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p><button type="button" class="btn small add icon" id="carrier-add-parcel">{{ 'Add parcel'|t('carrier') }}</button></p>
+
+            <div class="flex" style="gap: 6px; margin-top: 16px;">
+                <button type="submit" class="btn submit" onclick="this.classList.add('loading'); this.disabled = true; this.form.submit();">{{ 'Buy label'|t('carrier') }}</button>
+                {% if 'rates' in carrier.features %}<button type="button" class="btn" id="carrier-shop">{{ 'Compare rates'|t('carrier') }}</button>{% endif %}
+                {% if 'addressValidation' in carrier.features %}<button type="button" class="btn" id="carrier-validate">{{ 'Check address'|t('carrier') }}</button>{% endif %}
+                <button type="button" class="btn" id="carrier-preview">{{ 'Show request'|t('carrier') }}</button>
+            </div>
+            <div id="carrier-output" style="margin-top: 12px;"></div>
+        </form>
+    {% elseif not connections %}
+        <p class="light">{{ 'No enabled connection can create labels.'|t('carrier') }} <a href="{{ url('carrier/connections') }}">{{ 'Connections'|t('carrier') }}</a></p>
+    {% endif %}
+
+    {% if canCreate and trackingConnections %}
+        <hr>
+        <details>
+            <summary>{{ 'Shipped some other way? Record its tracking number'|t('carrier') }}</summary>
+            <p class="light">{{ 'For a label made in the carrier’s portal or at a counter. Carrier follows its tracking and writes it to the order like any other.'|t('carrier') }}</p>
+            <form method="post" class="flex" style="gap: 8px; align-items: flex-end;">
+                {{ csrfInput() }}{{ actionInput('carrier/shipments/record') }}{{ hiddenInput('orderId', order.id) }}{{ redirectInput(craft.app.request.pathInfo) }}
+                <div class="select"><select name="connectionId">
+                    {% for c in trackingConnections %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                </select></div>
+                <input class="text code" type="text" name="trackingNumber" required size="24" placeholder="{{ 'Tracking number'|t('carrier') }}">
+                <button class="btn">{{ 'Record'|t('carrier') }}</button>
+            </form>
+        </details>
+    {% endif %}
+{% endblock %}
+
+{% js %}
+(function() {
+    const form = document.getElementById('carrier-purchase');
+    if (!form) { return; }
+    const out = document.getElementById('carrier-output');
+    const tbody = document.querySelector('#carrier-parcels tbody');
+    document.getElementById('carrier-add-parcel').addEventListener('click', () => {
+        const i = tbody.querySelectorAll('tr').length + Date.now() % 1000;
+        const row = tbody.querySelector('tr') ? tbody.querySelector('tr').cloneNode(true) : null;
+        if (!row) { return; }
+        row.querySelectorAll('input').forEach((input) => {
+            input.name = input.name.replace(/parcels\[\d+\]/, 'parcels[' + i + ']');
+            if (input.type !== 'hidden') { input.value = ''; } else { input.value = '[]'; }
+        });
+        tbody.appendChild(row);
+    });
+    const data = () => {
+        const fd = new FormData(form);
+        fd.delete('action');
+        return fd;
+    };
+    const show = (html) => { out.innerHTML = html; };
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const shop = document.getElementById('carrier-shop');
+    if (shop) {
+        shop.addEventListener('click', () => {
+            shop.classList.add('loading');
+            Craft.sendActionRequest('POST', 'carrier/shipments/shop', { data: data() })
+                .then(({ data }) => {
+                    if (data.error) { show('<p class="error">' + esc(data.error) + '</p>'); return; }
+                    show('<table class="data"><tr><th>Service</th><th>Price</th><th>Days</th></tr>' + data.rates.map((r) =>
+                        '<tr><td>' + esc(r.serviceName || r.serviceCode) + ' <code>' + esc(r.serviceCode) + '</code></td><td>' + esc(r.amount) + ' ' + esc(r.currency) + '</td><td>' + esc(r.transitDays ?? '') + '</td></tr>').join('') + '</table>');
+                })
+                .catch(() => show('<p class="error">' + Craft.t('carrier', 'The rate request failed.') + '</p>'))
+                .finally(() => shop.classList.remove('loading'));
+        });
+    }
+    const preview = document.getElementById('carrier-preview');
+    preview.addEventListener('click', () => {
+        Craft.sendActionRequest('POST', 'carrier/shipments/preview', { data: data() })
+            .then(({ data }) => show('<pre class="code" style="white-space: pre-wrap;">' + esc(JSON.stringify(data.request, null, 2)) + '</pre>'));
+    });
+    const validate = document.getElementById('carrier-validate');
+    if (validate) {
+        validate.addEventListener('click', () => {
+            Craft.sendActionRequest('POST', 'carrier/shipments/validate-address', { data: data() })
+                .then(({ data }) => show(data.error ? '<p class="error">' + esc(data.error) + '</p>' :
+                    '<p class="' + (data.valid ? 'success' : 'error') + '">' + (data.valid ? '✓' : '✗') + ' ' + esc((data.messages || []).join(' ')) + '</p>' +
+                    (data.suggestions || []).map((a) => '<p class="light">' + esc([a.street1, a.houseNumber, a.postcode, a.city, a.region, a.countryCode].filter(Boolean).join(' ')) + '</p>').join('')));
+        });
+    }
+})();
+{% endjs %}

@@ -1,0 +1,43 @@
+{% extends '_layouts/cp' %}
+
+{% set title = (entry.method ?? entry.type)|upper %}
+{% set selectedSubnavItem = 'log' %}
+{% set crumbs = [{ label: 'Log'|t('carrier'), url: url('carrier/log') }] %}
+
+{% block content %}
+    <div class="pane">
+        <p class="code" style="word-break: break-all;">{{ entry.method }} {{ entry.url }}</p>
+        <p>
+            <strong class="{{ entry.isError() ? 'error' }}">{{ entry.statusLabel() }}</strong>
+            · {{ entry.durationMs ? entry.durationMs ~ 'ms' : '—' }}
+            {% if entry.attempt and entry.attempt > 1 %} · {{ 'attempt {n}'|t('carrier', { n: entry.attempt }) }}{% endif %}
+            {% if connection %} · <a href="{{ url('carrier/connections/' ~ connection.id) }}">{{ connection.name }}</a>{% endif %}
+            {% if entry.shipmentId %} · <a href="{{ url('carrier/shipments/' ~ entry.shipmentId) }}">{{ 'the shipment'|t('carrier') }}</a>{% endif %}
+        </p>
+        {% if entry.message %}<p class="error">{{ entry.message }}</p>{% endif %}
+    </div>
+
+    {% if entry.headers()|length %}
+        <h2>{{ 'Request headers'|t('carrier') }}</h2>
+        <table class="data fullwidth">
+            <tbody>
+                {% for name, value in entry.headers() %}
+                    <tr>
+                        <th scope="row" class="code">{{ name }}</th>
+                        <td class="code">{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if entry.requestBody %}
+        <h2>{{ 'Sent'|t('carrier') }}</h2>
+        <pre class="code" style="white-space: pre-wrap; word-break: break-word;">{{ entry.prettyBody(entry.requestBody) }}</pre>
+    {% endif %}
+
+    {% if entry.responseBody %}
+        <h2>{{ 'Received'|t('carrier') }}</h2>
+        <pre class="code" style="white-space: pre-wrap; word-break: break-word;">{{ entry.prettyBody(entry.responseBody) }}</pre>
+    {% endif %}
+{% endblock %}

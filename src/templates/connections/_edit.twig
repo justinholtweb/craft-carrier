@@ -1,0 +1,172 @@
+{% extends '_layouts/cp' %}
+{% set title = connection.id ? connection.name : 'New connection'|t('carrier') %}
+{% set selectedSubnavItem = 'connections' %}
+{% set fullPageForm = true %}
+{% set crumbs = [{ label: 'Connections'|t('carrier'), url: url('carrier/connections') }] %}
+
+{% block content %}
+    {% import '_includes/forms' as forms %}
+
+    {{ actionInput('carrier/connections/save') }}
+    {{ redirectInput('carrier/connections/{id}') }}
+    {{ hiddenInput('connectionId', connection.id) }}
+
+    {% if not connection.id %}
+        {% set carrierOptions = [{ label: 'Choose a carrier…'|t('carrier'), value: '' }] %}
+        {% for region, list in carriers %}
+            {% set carrierOptions = carrierOptions|merge([{ optgroup: region }]) %}
+            {% for item in list %}
+                {% set carrierOptions = carrierOptions|merge([{ label: item.name, value: item.handle }]) %}
+            {% endfor %}
+        {% endfor %}
+
+        {{ forms.selectField({
+            first: true,
+            label: 'Carrier'|t('carrier'),
+            instructions: 'Each carrier is a free add-on plugin. Pick one, then fill in its credentials.'|t('carrier'),
+            id: 'carrier',
+            name: 'carrier',
+            options: carrierOptions,
+            value: connection.carrier,
+            errors: connection.getErrors('carrier'),
+            inputAttributes: { onchange: "if(this.value){window.location='" ~ url('carrier/connections/new') ~ "?carrier='+this.value}" }
+        }) }}
+    {% else %}
+        {{ hiddenInput('carrier', connection.carrier) }}
+    {% endif %}
+
+    {% if connection.carrier and carrier is null %}
+        <div class="pane"><p class="error">{{ 'The add-on for “{handle}” is not installed. The connection and its history are safe — reinstall the plugin and everything comes back.'|t('carrier', { handle: connection.carrier }) }}</p></div>
+    {% endif %}
+
+    {% if carrier %}
+        <div class="readable">
+            <h2>{{ carrier.name }}</h2>
+            <p class="light">{{ carrier.description }}</p>
+            <p>{% for label in carrier.featureLabels %}<span class="badge">{{ label }}</span> {% endfor %}</p>
+            {% if carrier.setupUrl %}<p><a href="{{ carrier.setupUrl }}" rel="noopener noreferrer" target="_blank">{{ 'Where to get these credentials'|t('carrier') }} →</a></p>{% endif %}
+        </div>
+        <hr>
+
+        {{ forms.textField({
+            label: 'Name'|t('carrier'),
+            instructions: 'What you call this account, e.g. “GLS Croatia” or “UPS sandbox”.'|t('carrier'),
+            id: 'name', name: 'name', value: connection.name ?: carrier.name, required: true,
+            errors: connection.getErrors('name')
+        }) }}
+
+        {{ forms.textField({
+            label: 'Handle'|t('carrier'),
+            instructions: 'Used by console commands and the webhook URL.'|t('carrier'),
+            id: 'handle', name: 'handle', class: 'code', value: connection.handle, required: true,
+            errors: connection.getErrors('handle')
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: 'Enabled'|t('carrier'),
+            instructions: 'Required credentials are only checked once a connection is enabled, so you can save a half-finished setup.'|t('carrier'),
+            id: 'enabled', name: 'enabled', on: connection.enabled
+        }) }}
+
+        <hr>
+        <h2>{{ 'Credentials'|t('carrier') }}</h2>
+        {% include 'carrier/_settings-fields' with { fields: carrier.settingsFields, values: connection.settings, prefix: 'settings' } only %}
+
+        {% if connection.getErrors('settings') %}
+            <ul class="errors">{% for error in connection.getErrors('settings') %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        {% if hasPoints and isListPoints %}
+            {{ forms.textField({
+                label: 'Pickup point countries'|t('carrier'),
+                instructions: 'Comma-separated country codes to sync points for. Blank uses the carrier’s home countries.'|t('carrier'),
+                id: 'settings-pointCountries', name: 'settings[pointCountries]', class: 'code',
+                value: connection.settings.pointCountries ?? ''
+            }) }}
+        {% endif %}
+
+        {% if labelFormatOptions %}
+            {{ forms.selectField({
+                label: 'Label format'|t('carrier'),
+                instructions: 'Match the printer on the packing bench. Thermal printers want A6, 4×6 or ZPL.'|t('carrier'),
+                id: 'labelFormat', name: 'labelFormat',
+                options: labelFormatOptions, value: connection.labelFormat,
+                errors: connection.getErrors('labelFormat')
+            }) }}
+        {% endif %}
+
+        {% if connection.id %}
+            <div class="field">
+                <button type="button" class="btn" id="carrier-test">{{ 'Test connection'|t('carrier') }}</button>
+                <div id="carrier-test-result" class="light" style="margin-top: 8px;"></div>
+            </div>
+        {% else %}
+            <p class="light">{{ 'Save the connection before testing it.'|t('carrier') }}</p>
+        {% endif %}
+
+        <hr>
+        <h2>{{ 'Ship from'|t('carrier') }}</h2>
+        <p class="light">{{ 'Leave blank to use the store location set in Commerce. Fill in to ship this account from somewhere else — a warehouse, a second country.'|t('carrier') }}</p>
+        {% set from = connection.shipFrom %}
+        <div class="flex flex-wrap" style="gap: 12px; align-items: flex-start;">
+            {% for key, label in {
+                company: 'Company'|t('carrier'), name: 'Contact'|t('carrier'), street1: 'Street'|t('carrier'),
+                houseNumber: 'House number'|t('carrier'), street2: 'Street line 2'|t('carrier'), postcode: 'Postcode'|t('carrier'),
+                city: 'City'|t('carrier'), region: 'State / region code'|t('carrier'), countryCode: 'Country code'|t('carrier'),
+                phone: 'Phone'|t('carrier'), email: 'Email'|t('carrier')
+            } %}
+                {{ forms.textField({ label: label, id: 'shipFrom-' ~ key, name: 'shipFrom[' ~ key ~ ']', value: from[key] ?? '', size: key in ['countryCode', 'region', 'houseNumber'] ? 6 : 24 }) }}
+            {% endfor %}
+        </div>
+
+        {% if webhookUrl %}
+            <hr>
+            {{ forms.textField({ label: 'Tracking webhook URL'|t('carrier'), instructions: 'Paste this into the carrier’s portal to get tracking pushed instead of polled.'|t('carrier'), id: 'webhook-url', value: webhookUrl, class: 'code', readonly: true }) }}
+        {% endif %}
+
+        {% if hasPoints and connection.id %}
+            <hr>
+            <h2>{{ 'Pickup points'|t('carrier') }}</h2>
+            <p>{{ '{n} points stored.'|t('carrier', { n: pointCount }) }}
+                {% if connection.pointsSyncedAt %}<span class="light">{{ 'Last synced {date}.'|t('carrier', { date: connection.pointsSyncedAt|datetime('short') }) }}</span>{% endif %}
+            </p>
+            {% if isListPoints %}
+                <button type="button" class="btn" id="carrier-sync">{{ 'Sync now'|t('carrier') }}</button>
+            {% endif %}
+            <a class="btn" href="{{ url('carrier/points', { connection: connection.id }) }}">{{ 'Browse and import'|t('carrier') }}</a>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% js %}
+(function() {
+    const id = {{ connection.id|json_encode|raw }};
+    const testBtn = document.getElementById('carrier-test');
+    if (testBtn) {
+        testBtn.addEventListener('click', () => {
+            const out = document.getElementById('carrier-test-result');
+            testBtn.classList.add('loading');
+            out.textContent = '';
+            Craft.sendActionRequest('POST', 'carrier/connections/test', { data: { connectionId: id } })
+                .then(({ data }) => {
+                    const lines = [(data.ok ? '✓ ' : '✗ ') + data.message];
+                    Object.entries(data.details || {}).forEach(([k, v]) => lines.push(k + ': ' + v));
+                    (data.hints || []).forEach((h) => lines.push('→ ' + h));
+                    out.innerText = lines.join('\n');
+                    out.className = data.ok ? 'success' : 'error';
+                })
+                .catch(() => { out.textContent = Craft.t('carrier', 'The test request failed.'); out.className = 'error'; })
+                .finally(() => testBtn.classList.remove('loading'));
+        });
+    }
+    const syncBtn = document.getElementById('carrier-sync');
+    if (syncBtn) {
+        syncBtn.addEventListener('click', () => {
+            syncBtn.classList.add('loading');
+            Craft.sendActionRequest('POST', 'carrier/connections/sync-points', { data: { connectionId: id } })
+                .then(() => window.location.reload())
+                .catch(() => { syncBtn.classList.remove('loading'); Craft.cp.displayError(Craft.t('carrier', 'The sync failed. See the log.')); });
+        });
+    }
+})();
+{% endjs %}

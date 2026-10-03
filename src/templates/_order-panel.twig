@@ -1,0 +1,25 @@
+{# Inside Commerce's own order screen: a summary and the way in to the shipment screen. #}
+<div class="meta read-only" id="carrier-panel">
+    <h2 class="heading" style="padding: 0 24px; margin-top: 14px;">{{ 'Shipping'|t('carrier') }}</h2>
+    {% if selection %}
+        <div class="data"><h5 class="heading">{{ 'Pickup point'|t('carrier') }}</h5><div class="value">{{ selection.getLabel() }}</div></div>
+    {% elseif method and method.requiresPoint %}
+        <div class="data"><h5 class="heading">{{ 'Pickup point'|t('carrier') }}</h5><div class="value error">{{ 'Not chosen'|t('carrier') }}</div></div>
+    {% endif %}
+    {% for shipment in shipments %}
+        <div class="data">
+            <h5 class="heading">{{ shipment.getCarrierName() }}</h5>
+            <div class="value">
+                {% if shipment.trackingNumber %}
+                    {% if shipment.getTrackingUrl() %}<a href="{{ shipment.getTrackingUrl() }}" target="_blank" rel="noopener">{{ shipment.trackingNumber }}</a>{% else %}{{ shipment.trackingNumber }}{% endif %}
+                    · {{ shipment.getTrackingStatusLabel() }}
+                {% else %}
+                    {{ shipment.getStatusLabel() }}
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+    <div class="data">
+        <div class="value"><a class="btn small" href="{{ url('carrier/orders/' ~ order.id) }}">{{ shipments ? 'Manage shipments'|t('carrier') : 'Create label'|t('carrier') }}</a></div>
+    </div>
+</div>

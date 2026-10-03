@@ -1,0 +1,64 @@
+{
+    "name": "justinholtweb/craft-carrier",
+    "description": "The shipping carrier gateway for Craft Commerce — live rates, labels, pickup points and tracking, with a free add-on for every carrier.",
+    "version": "5.0.0",
+    "type": "craft-plugin",
+    "keywords": [
+        "craftcms",
+        "craft-plugin",
+        "craft-commerce",
+        "commerce",
+        "shipping",
+        "labels",
+        "tracking",
+        "carrier",
+        "parcel-lockers"
+    ],
+    "license": "proprietary",
+    "homepage": "https://justinholt.com/plugins/craft-carrier",
+    "authors": [
+        {
+            "name": "Justin Holt",
+            "homepage": "https://justinholt.com"
+        }
+    ],
+    "support": {
+        "email": "justin@justinholt.com",
+        "docs": "https://justinholt.com/plugins/craft-carrier/docs",
+        "source": "https://github.com/justinholtweb/craft-carrier",
+        "issues": "https://github.com/justinholtweb/craft-carrier/issues"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-zip": "*",
+        "craftcms/cms": "^5.3.0",
+        "craftcms/commerce": "^5.0.0"
+    },
+    "require-dev": {
+        "craftcms/phpstan": "dev-main",
+        "phpstan/phpstan": "^1.12 || ^2.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "justinholtweb\\carrier\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "craftcms/plugin-installer": true,
+            "yiisoft/yii2-composer": true
+        }
+    },
+    "extra": {
+        "name": "Carrier",
+        "handle": "carrier",
+        "developer": "Justin Holt",
+        "developerUrl": "https://justinholt.com",
+        "documentationUrl": "https://justinholt.com/plugins/craft-carrier/docs",
+        "changelogUrl": "https://raw.githubusercontent.com/justinholtweb/craft-carrier/main/CHANGELOG.md",
+        "class": "justinholtweb\\carrier\\Plugin"
+    }
+}

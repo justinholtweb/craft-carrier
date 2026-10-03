@@ -1,0 +1,5 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Nothing to print'|t('carrier') %}
+{% block content %}
+    <p>{{ 'None of the selected orders has a label yet. Use “Create shipping labels” first, then print once the labels are made.'|t('carrier') }}</p>
+{% endblock %}

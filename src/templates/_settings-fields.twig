@@ -1,0 +1,39 @@
+{# Renders a carrier's declarative settings fields. Expects `fields`, `values`, `prefix`. #}
+{% import '_includes/forms' as forms %}
+
+{% for field in fields %}
+    {% set value = values[field.name] ?? field.default ?? '' %}
+    {% set name = prefix ~ '[' ~ field.name ~ ']' %}
+    {% set id = prefix ~ '-' ~ field.name %}
+
+    {% if field.type == 'heading' %}
+        <h3>{{ field.label|t('carrier') }}</h3>
+        {% if field.instructions %}<p class="light">{{ field.instructions|t('carrier') }}</p>{% endif %}
+    {% elseif field.type == 'copyable' %}
+        {{ forms.textField({ label: field.label|t('carrier'), instructions: field.instructions|t('carrier'), id: id, value: field.value, class: 'code', readonly: true }) }}
+    {% elseif field.type == 'boolean' %}
+        {{ forms.lightswitchField({ label: field.label|t('carrier'), instructions: field.instructions|t('carrier'), id: id, name: name, on: value }) }}
+    {% elseif field.type == 'select' %}
+        {% set options = [] %}
+        {% for optionValue, optionLabel in field.options %}
+            {% set options = options|merge([{ value: optionValue, label: optionLabel|t('carrier') }]) %}
+        {% endfor %}
+        {{ forms.selectField({ label: field.label|t('carrier'), instructions: field.instructions|t('carrier'), id: id, name: name, options: options, value: value, required: field.required }) }}
+    {% elseif field.secret %}
+        {# A saved secret never goes back to the browser. Blank means "keep what is stored". #}
+        {{ forms.autosuggestField({
+            label: field.label|t('carrier'),
+            instructions: field.instructions|t('carrier'),
+            id: id,
+            name: name,
+            suggestEnvVars: true,
+            value: (value starts with '$') ? value : '',
+            placeholder: value ? '••••••••  ' ~ 'saved — leave blank to keep it'|t('carrier') : (field.placeholder ?? ''),
+            required: field.required
+        }) }}
+    {% elseif field.suggestEnvVars %}
+        {{ forms.autosuggestField({ label: field.label|t('carrier'), instructions: field.instructions|t('carrier'), id: id, name: name, suggestEnvVars: true, value: value, placeholder: field.placeholder ?? '', required: field.required }) }}
+    {% else %}
+        {{ forms.textField({ label: field.label|t('carrier'), instructions: field.instructions|t('carrier'), id: id, name: name, type: field.type == 'number' ? 'number' : 'text', value: value, placeholder: field.placeholder ?? '', required: field.required }) }}
+    {% endif %}
+{% endfor %}

@@ -1,0 +1,75 @@
+{% import '_includes/forms' as forms %}
+
+<h2>{{ 'Packing'|t('carrier') }}</h2>
+{{ forms.selectField({
+    label: 'Default packing'|t('carrier'),
+    instructions: 'How line items become parcels. A checkout method can override this.'|t('carrier'),
+    id: 'packingStrategy', name: 'packingStrategy',
+    options: [
+        { label: 'Pack into boxes'|t('carrier'), value: 'boxes' },
+        { label: 'Everything in one parcel'|t('carrier'), value: 'single' },
+        { label: 'One parcel per item'|t('carrier'), value: 'perItem' },
+    ],
+    value: settings.packingStrategy
+}) }}
+
+{{ forms.editableTableField({
+    label: 'Boxes'|t('carrier'),
+    instructions: 'Your cartons, in the store’s own units. The packer tries the smallest that fits first.'|t('carrier'),
+    id: 'boxes', name: 'boxes',
+    cols: {
+        name: { heading: 'Name'|t('carrier'), type: 'singleline' },
+        length: { heading: 'Length'|t('carrier'), type: 'number' },
+        width: { heading: 'Width'|t('carrier'), type: 'number' },
+        height: { heading: 'Height'|t('carrier'), type: 'number' },
+        tare: { heading: 'Empty weight'|t('carrier'), type: 'number' },
+        maxWeight: { heading: 'Max weight'|t('carrier'), type: 'number' },
+    },
+    rows: settings.boxes,
+    allowAdd: true, allowDelete: true, allowReorder: true
+}) }}
+
+{{ forms.textField({ label: 'Weight for items with none'|t('carrier'), instructions: 'In store weight units. 0 sends what the product says, even if that is nothing.'|t('carrier'), id: 'defaultItemWeight', name: 'defaultItemWeight', type: 'number', step: 'any', value: settings.defaultItemWeight }) }}
+
+<hr>
+<h2>{{ 'Addresses'|t('carrier') }}</h2>
+{{ forms.textField({ label: 'Phone field handle'|t('carrier'), instructions: 'Commerce addresses have no phone number. Add a field to the address layout and name it here — most carriers in this family require one for delivery texts.'|t('carrier'), id: 'phoneField', name: 'phoneField', class: 'code', value: settings.phoneField }) }}
+{{ forms.textField({ label: 'House number field handle'|t('carrier'), instructions: 'If your address form collects it separately. Otherwise Carrier splits it off the street line.'|t('carrier'), id: 'houseNumberField', name: 'houseNumberField', class: 'code', value: settings.houseNumberField }) }}
+{{ forms.textField({ label: 'Default calling code'|t('carrier'), instructions: 'Completes local numbers: “385” turns 091 234 5678 into +385912345678.'|t('carrier'), id: 'defaultCallingCode', name: 'defaultCallingCode', class: 'code', value: settings.defaultCallingCode, size: 6 }) }}
+
+<hr>
+<h2>{{ 'Customs'|t('carrier') }}</h2>
+{{ forms.textField({ label: 'HS code field handle'|t('carrier'), id: 'hsCodeField', name: 'hsCodeField', class: 'code', value: settings.hsCodeField }) }}
+{{ forms.textField({ label: 'Country of origin field handle'|t('carrier'), id: 'originCountryField', name: 'originCountryField', class: 'code', value: settings.originCountryField }) }}
+{{ forms.textField({ label: 'Default country of origin'|t('carrier'), id: 'defaultOriginCountry', name: 'defaultOriginCountry', class: 'code', value: settings.defaultOriginCountry, size: 2 }) }}
+
+<hr>
+<h2>{{ 'Checkout'|t('carrier') }}</h2>
+{{ forms.textField({ label: 'Reuse live rates for (minutes)'|t('carrier'), instructions: 'Every cart view would otherwise be a paid API call. USPS allows about 60 an hour by default.'|t('carrier'), id: 'rateCacheMinutes', name: 'rateCacheMinutes', type: 'number', value: settings.rateCacheMinutes }) }}
+{{ forms.lightswitchField({ label: 'Require a pickup point before payment'|t('carrier'), id: 'requirePointOnPayment', name: 'requirePointOnPayment', on: settings.requirePointOnPayment }) }}
+{% set gatewayOptions = [] %}
+{% for gateway in craft.commerce.gateways.getAllGateways() %}{% set gatewayOptions = gatewayOptions|merge([{ label: gateway.name, value: gateway.handle }]) %}{% endfor %}
+{{ forms.checkboxSelectField({ label: 'Cash on delivery gateways'|t('carrier'), instructions: 'Orders paid through these ship with cash on delivery for the outstanding balance.'|t('carrier'), id: 'codGateways', name: 'codGateways', options: gatewayOptions, values: settings.codGateways }) }}
+
+<hr>
+<h2>{{ 'After the order'|t('carrier') }}</h2>
+{{ forms.lightswitchField({ label: 'Create the label when an order is completed'|t('carrier'), instructions: 'For orders on a Carrier checkout method. Queued, so checkout never waits on a carrier.'|t('carrier'), id: 'autoLabelOnComplete', name: 'autoLabelOnComplete', on: settings.autoLabelOnComplete }) }}
+{% set statusOptions = [{ label: 'Leave it alone'|t('carrier'), value: '' }] %}
+{% for status in craft.commerce.orderStatuses.getAllOrderStatuses() %}{% set statusOptions = statusOptions|merge([{ label: status.name, value: status.handle }]) %}{% endfor %}
+{{ forms.selectField({ label: 'Order status once labelled'|t('carrier'), id: 'orderStatusOnLabel', name: 'orderStatusOnLabel', options: statusOptions, value: settings.orderStatusOnLabel }) }}
+{{ forms.selectField({ label: 'Order status once delivered'|t('carrier'), instructions: 'Only once every shipment on the order has arrived.'|t('carrier'), id: 'orderStatusOnDelivered', name: 'orderStatusOnDelivered', options: statusOptions, value: settings.orderStatusOnDelivered }) }}
+
+<hr>
+<h2>{{ 'Tracking'|t('carrier') }}</h2>
+{{ forms.lightswitchField({ label: 'Poll carriers for tracking'|t('carrier'), id: 'trackingEnabled', name: 'trackingEnabled', on: settings.trackingEnabled }) }}
+{{ forms.textField({ label: 'Hours between checks'|t('carrier'), id: 'trackingIntervalHours', name: 'trackingIntervalHours', type: 'number', value: settings.trackingIntervalHours }) }}
+{{ forms.textField({ label: 'Stop tracking after (days)'|t('carrier'), id: 'trackingMaxDays', name: 'trackingMaxDays', type: 'number', value: settings.trackingMaxDays }) }}
+{{ forms.textField({ label: 'Re-sync pickup points every (hours)'|t('carrier'), id: 'pointsSyncHours', name: 'pointsSyncHours', type: 'number', value: settings.pointsSyncHours }) }}
+
+<hr>
+<h2>{{ 'Housekeeping'|t('carrier') }}</h2>
+{{ forms.textField({ label: 'Keep label files for (days)'|t('carrier'), instructions: 'Labels carry customers’ addresses. The shipment record and tracking are kept; only the document is removed.'|t('carrier'), id: 'labelRetentionDays', name: 'labelRetentionDays', type: 'number', value: settings.labelRetentionDays }) }}
+{{ forms.lightswitchField({ label: 'Log carrier requests'|t('carrier'), id: 'logRequests', name: 'logRequests', on: settings.logRequests }) }}
+{{ forms.lightswitchField({ label: 'Log failures only'|t('carrier'), id: 'logErrorsOnly', name: 'logErrorsOnly', on: settings.logErrorsOnly }) }}
+{{ forms.lightswitchField({ label: 'Log request and response bodies'|t('carrier'), id: 'logBodies', name: 'logBodies', on: settings.logBodies }) }}
+{{ forms.textField({ label: 'Keep the log for (days)'|t('carrier'), id: 'logRetentionDays', name: 'logRetentionDays', type: 'number', value: settings.logRetentionDays }) }}

@@ -1,0 +1,63 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{% set title = 'Log'|t('carrier') %}
+{% set selectedSubnavItem = 'log' %}
+
+{% block content %}
+    <div class="flex" style="margin-bottom: 14px;">
+        <form method="get" class="flex">
+            {% set connectionOptions = [{ label: 'Every connection'|t('carrier'), value: '' }] %}
+            {% for connection in connections %}
+                {% set connectionOptions = connectionOptions|merge([{ label: connection.name, value: connection.id }]) %}
+            {% endfor %}
+
+            {{ forms.select({ name: 'connection', options: connectionOptions, value: connectionId }) }}
+            {{ forms.select({
+                name: 'errors',
+                options: [
+                    { label: 'Everything'|t('carrier'), value: '' },
+                    { label: 'Failures only'|t('carrier'), value: '1' }
+                ],
+                value: errorsOnly ? '1' : ''
+            }) }}
+            <button type="submit" class="btn">{{ 'Filter'|t('carrier') }}</button>
+        </form>
+    </div>
+
+    {% if entries|length %}
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th scope="col">{{ 'When'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Status'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Request'|t('carrier') }}</th>
+                    <th scope="col">{{ 'Took'|t('carrier') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                    <tr>
+                        <td><a href="{{ url('carrier/log/' ~ entry.id) }}">{{ entry.dateCreated ? entry.dateCreated|datetime('short') : '' }}</a></td>
+                        <td class="{{ entry.isError() ? 'error' }}">
+                            {{ entry.statusLabel() }}
+                            {% if entry.attempt and entry.attempt > 1 %}<span class="light">· try {{ entry.attempt }}</span>{% endif %}
+                        </td>
+                        <td class="code">
+                            {% if entry.type == 'request' %}
+                                {{ entry.method }} {{ entry.url|slice(0, 130) }}
+                            {% else %}
+                                {{ entry.message|slice(0, 160) }}
+                            {% endif %}
+                        </td>
+                        <td class="light">{{ entry.durationMs ? entry.durationMs ~ 'ms' : '—' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="pane">
+            <p>{{ 'Nothing logged yet.'|t('carrier') }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

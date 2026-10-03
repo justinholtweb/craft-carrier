@@ -1,0 +1,12 @@
+{# The two ways a human settles a purchase the carrier never confirmed. #}
+<form method="post" class="flex" style="gap: 6px;">
+    {{ csrfInput() }}{{ actionInput('carrier/shipments/resolve') }}{{ hiddenInput('shipmentId', shipment.id) }}{{ redirectInput(craft.app.request.pathInfo) }}
+    {{ hiddenInput('outcome', 'created') }}
+    <input class="text code" type="text" name="trackingNumber" placeholder="{{ 'Tracking number found'|t('carrier') }}" size="22" required>
+    <button class="btn small">{{ 'It was created'|t('carrier') }}</button>
+</form>
+<form method="post">
+    {{ csrfInput() }}{{ actionInput('carrier/shipments/resolve') }}{{ hiddenInput('shipmentId', shipment.id) }}{{ redirectInput(craft.app.request.pathInfo) }}
+    {{ hiddenInput('outcome', 'notCreated') }}
+    <button class="btn small">{{ 'It was not created'|t('carrier') }}</button>
+</form>

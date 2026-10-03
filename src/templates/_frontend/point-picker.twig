@@ -1,0 +1,122 @@
+{#
+    Carrier's drop-in pickup-point picker.
+
+    Override it by copying this file to your site's `templates/_carrier/point-picker.twig`.
+    Variables: cart, method, selection, options.
+    No dependencies, no build step. It talks to two endpoints:
+      GET  actions/carrier/points/search?method=…&postcode=…   (or lat/lng)
+      POST actions/carrier/points/select   method, pointId
+#}
+{% set id = 'carrier-picker-' ~ random() %}
+<div class="carrier-picker" id="{{ id }}" data-method="{{ method.handle }}">
+    <p class="carrier-picker__chosen" {% if not selection %}hidden{% endif %}>
+        {{ 'Delivering to:'|t('carrier') }} <strong data-chosen>{{ selection ? selection.getLabel() }}</strong>
+    </p>
+    <div class="carrier-picker__search">
+        <label>
+            <span>{{ 'Find a pickup point near'|t('carrier') }}</span>
+            <input type="text" inputmode="text" autocomplete="postal-code" data-postcode value="{{ cart.shippingAddress.postalCode ?? '' }}" placeholder="{{ 'Postcode or town'|t('carrier') }}">
+        </label>
+        <button type="button" data-search>{{ 'Search'|t('carrier') }}</button>
+        <button type="button" data-locate>{{ 'Use my location'|t('carrier') }}</button>
+    </div>
+    <p data-status role="status" aria-live="polite"></p>
+    <ul class="carrier-picker__list" data-list></ul>
+</div>
+<style>
+    .carrier-picker__list { list-style: none; padding: 0; margin: 0; max-height: 22rem; overflow: auto; }
+    .carrier-picker__list li { padding: .5rem .25rem; border-bottom: 1px solid rgba(0,0,0,.1); }
+    .carrier-picker__list label { display: flex; gap: .5rem; cursor: pointer; }
+    .carrier-picker__meta { opacity: .7; font-size: .875em; }
+</style>
+<script>
+(function () {
+    const root = document.getElementById({{ id|json_encode|raw }});
+    const method = root.dataset.method;
+    const list = root.querySelector('[data-list]');
+    const status = root.querySelector('[data-status]');
+    const chosen = root.querySelector('[data-chosen]');
+    const csrf = { name: {{ craft.app.config.general.csrfTokenName|json_encode|raw }}, value: {{ craft.app.request.csrfToken|json_encode|raw }} };
+    const searchUrl = {{ actionUrl('carrier/points/search')|json_encode|raw }};
+    const selectUrl = {{ actionUrl('carrier/points/select')|json_encode|raw }};
+    const text = {
+        none: {{ 'No pickup points found nearby.'|t('carrier')|json_encode|raw }},
+        failed: {{ 'Couldn’t load pickup points. Please try again.'|t('carrier')|json_encode|raw }},
+        saved: {{ 'Pickup point saved.'|t('carrier')|json_encode|raw }},
+        km: {{ 'km'|t('carrier')|json_encode|raw }},
+    };
+
+    function render(points, selected) {
+        list.innerHTML = '';
+        if (!points.length) { status.textContent = text.none; return; }
+        status.textContent = '';
+        points.forEach((p) => {
+            const li = document.createElement('li');
+            const label = document.createElement('label');
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'carrier-point-' + method;
+            radio.value = p.id;
+            radio.checked = p.id === selected;
+            radio.addEventListener('change', () => choose(p));
+            const body = document.createElement('span');
+            const name = document.createElement('strong');
+            name.textContent = p.name;
+            const meta = document.createElement('span');
+            meta.className = 'carrier-picker__meta';
+            meta.textContent = ' ' + [p.street, (p.postcode + ' ' + p.city).trim(), p.hours, p.distanceKm != null ? p.distanceKm + ' ' + text.km : ''].filter(Boolean).join(' · ');
+            body.append(name, meta);
+            label.append(radio, body);
+            li.append(label);
+            list.append(li);
+        });
+    }
+
+    function search(params) {
+        status.textContent = '…';
+        const url = new URL(searchUrl, window.location.href);
+        url.searchParams.set('method', method);
+        Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+        fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+            .then((r) => r.ok ? r.json() : Promise.reject())
+            .then((data) => render(data.points || [], data.selected))
+            .catch(() => { status.textContent = text.failed; });
+    }
+
+    function choose(point) {
+        const body = new FormData();
+        body.append(csrf.name, csrf.value);
+        body.append('method', method);
+        body.append('pointId', point.id);
+        fetch(selectUrl, { method: 'POST', body, headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+            .then((r) => r.json())
+            .then((data) => {
+                if (!data.success) { status.textContent = data.error || text.failed; return; }
+                chosen.textContent = data.label;
+                chosen.closest('p').hidden = false;
+                status.textContent = text.saved;
+                root.dispatchEvent(new CustomEvent('carrier:point-selected', { bubbles: true, detail: point }));
+            })
+            .catch(() => { status.textContent = text.failed; });
+    }
+
+    root.querySelector('[data-search]').addEventListener('click', () => {
+        const term = root.querySelector('[data-postcode]').value.trim();
+        search(/^\d/.test(term) ? { postcode: term } : { city: term });
+    });
+    root.querySelector('[data-postcode]').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); root.querySelector('[data-search]').click(); }
+    });
+    const locate = root.querySelector('[data-locate]');
+    if (!('geolocation' in navigator)) { locate.hidden = true; }
+    locate.addEventListener('click', () => {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => search({ lat: pos.coords.latitude.toFixed(5), lng: pos.coords.longitude.toFixed(5) }),
+            () => { status.textContent = text.failed; },
+            { timeout: 8000 }
+        );
+    });
+
+    search({});
+})();
+</script>

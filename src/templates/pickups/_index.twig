@@ -1,0 +1,56 @@
+{% extends '_layouts/cp' %}
+{% set title = 'Collections'|t('carrier') %}
+{% set selectedSubnavItem = 'pickups' %}
+
+{% block content %}
+    {% import '_includes/forms' as forms %}
+
+    {% if not pickupConnections and not closeConnections %}
+        <div class="zilch"><p>{{ 'None of your carriers takes collection requests or end-of-day closes through its API.'|t('carrier') }}</p></div>
+    {% endif %}
+
+    {% for connection in pickupConnections %}
+        <div class="pane">
+            <h2>{{ connection.name }}</h2>
+            <p class="light">{{ '{n} labelled parcels waiting for collection.'|t('carrier', { n: waiting[connection.id] ?? 0 }) }}</p>
+            <form method="post" class="flex" style="gap: 8px; align-items: flex-end;">
+                {{ csrfInput() }}{{ actionInput('carrier/pickups/request') }}{{ hiddenInput('connectionId', connection.id) }}{{ redirectInput('carrier/pickups') }}
+                {{ forms.dateField({ label: 'Date'|t('carrier'), name: 'date', value: now|date_modify('+1 day') }) }}
+                {{ forms.textField({ label: 'Ready from'|t('carrier'), name: 'readyTime', value: '09:00', size: 5 }) }}
+                {{ forms.textField({ label: 'Closes at'|t('carrier'), name: 'closeTime', value: '17:00', size: 5 }) }}
+                {{ forms.textField({ label: 'Note for the driver'|t('carrier'), name: 'instructions', size: 30 }) }}
+                <button class="btn submit">{{ 'Book collection'|t('carrier') }}</button>
+            </form>
+        </div>
+    {% endfor %}
+
+    {% for connection in closeConnections %}
+        <div class="pane">
+            <h2>{{ connection.name }} — {{ 'end of day'|t('carrier') }}</h2>
+            <p class="light">{{ 'Closes every open shipment and downloads the manifest for the driver, where the carrier issues one.'|t('carrier') }}</p>
+            <form method="post">
+                {{ csrfInput() }}{{ actionInput('carrier/pickups/close') }}{{ hiddenInput('connectionId', connection.id) }}{{ redirectInput('carrier/pickups') }}
+                <button class="btn">{{ 'Close the day'|t('carrier') }}</button>
+            </form>
+        </div>
+    {% endfor %}
+
+    {% if recent %}
+        <hr>
+        <h2>{{ 'Recent'|t('carrier') }}</h2>
+        <table class="data fullwidth">
+            <thead><tr><th>{{ 'Date'|t('carrier') }}</th><th>{{ 'Connection'|t('carrier') }}</th><th>{{ 'Parcels'|t('carrier') }}</th><th>{{ 'Status'|t('carrier') }}</th><th>{{ 'Reference'|t('carrier') }}</th></tr></thead>
+            <tbody>
+                {% for row in recent %}
+                    <tr>
+                        <td>{{ row.pickupDate }} {{ row.readyTime }}{{ row.closeTime ? '–' ~ row.closeTime }}</td>
+                        <td>{{ connectionNames[row.connectionId] ?? row.carrier }}</td>
+                        <td>{{ row.parcelCount }}</td>
+                        <td class="{{ 'failed' in row.status ? 'error' }}">{{ row.status }}{% if row.message %}<div class="smalltext">{{ row.message }}</div>{% endif %}</td>
+                        <td class="code">{{ row.reference }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}
