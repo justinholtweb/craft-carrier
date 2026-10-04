@@ -1,134 +1,132 @@
-# Writing a carrier
+---
+title: Carriers
+slug: carriers
+order: 15
+summary: Every carrier add-on, what each one can do, and why the add-ons are free.
+---
 
-A carrier add-on translates one carrier's API into Carrier's canonical documents, and does
-nothing else. No tables, settings screens, templates, queue jobs, packing, retries, logging or
-label storage. The gateway does all of that, once, for every carrier.
+# Carriers
 
-## Package layout
+Each carrier is a separate **free add-on plugin** that registers one or more carriers with Carrier.
+Install the add-on and its carriers appear in the list when you make a connection.
 
-```
-craft-carrier-<slug>/
-  composer.json            requires justinholtweb/craft-carrier ^5.0.0
-  src/Plugin.php           registers carriers on Carriers::EVENT_REGISTER_CARRIERS
-  src/carriers/XCarrier.php
-  src/icon.svg             family tile (rx 22.44), filled #FEFEFE glyph, no strokes
-  tests/fixtures.php       recorded happy-path responses for the conformance suite
-  README.md  CHANGELOG.md  LICENSE.md
-```
+| Add-on | Carriers | Package | Plugin handle |
+|---|---|---|---|
+| [UPS](/plugins/craft-carrier/docs/ups) | UPS | `justinholtweb/craft-carrier-ups` | `carrier-ups` |
+| [FedEx](/plugins/craft-carrier/docs/fedex) | FedEx | `justinholtweb/craft-carrier-fedex` | `carrier-fedex` |
+| [USPS](/plugins/craft-carrier/docs/usps) | USPS | `justinholtweb/craft-carrier-usps` | `carrier-usps` |
+| [LTL freight](/plugins/craft-carrier/docs/freight) | TForce Freight, Old Dominion, Estes Express, XPO, R+L Carriers, SAIA | `justinholtweb/craft-carrier-freight` | `carrier-freight` |
+| [DPD](/plugins/craft-carrier/docs/dpd) | DPD EasyShip (Croatia, Slovenia) | `justinholtweb/craft-carrier-dpd` | `carrier-dpd` |
+| [GLS](/plugins/craft-carrier/docs/gls) | GLS via MyGLS (Croatia, Hungary, Czechia, Romania, Slovenia, Slovakia, Serbia) | `justinholtweb/craft-carrier-gls` | `carrier-gls` |
+| [BOX NOW](/plugins/craft-carrier/docs/boxnow) | BOX NOW lockers (Greece, Cyprus, Bulgaria, Croatia, Slovenia) | `justinholtweb/craft-carrier-boxnow` | `carrier-boxnow` |
+| [National posts](/plugins/craft-carrier/docs/posts) | Hrvatska pošta, Pošta Slovenije, Magyar Posta (MPL), ELTA Courier | `justinholtweb/craft-carrier-posts` | `carrier-posts` |
 
-Namespace `justinholtweb\carrier<slug>`, handle `carrier-<slug>`. A package may register several
-carriers: `freight` has six and `posts` has four.
+Each carrier's page covers the credentials it asks for and where to find them, its services, and
+the vendor's own traps.
 
-## The class
+Two carriers ship with Carrier itself and need no add-on: **Mock Carrier**, for testing without an
+account, and **Pick up in store**, which turns your Commerce inventory locations into collection
+points. See [Installation](/plugins/craft-carrier/docs/installation) and [Pickup points](/plugins/craft-carrier/docs/pickup-points).
 
-Extend `justinholtweb\carrier\base\Carrier`. Implement these:
+## What each carrier can do
 
-- `handle()` is stable kebab-case and never changes, because connections store it. Use `ups`,
-  `fedex`, `usps`, `gls`, `dpd-easyship`, `boxnow`, `freight-odfl`, `posta-hr`, and so on.
-- `displayName()`, `region()` ("United States", "Europe", "Freight (US)"), `description()` and
-  `setupUrl()`.
-- `capabilities()` declares **exactly** what you implement. The conformance suite fails a feature
-  that is declared but not implemented, and one that is implemented but not declared.
-- `settingsFields()` uses `base\Field`. Mark every credential `Field::secret()`. Use
-  `Field::environment()` for a production/sandbox switch; `Carrier::isSandbox()` reads it.
-- `services()` returns `['code' => ['name' => …, 'international' => bool, 'points' => bool]]`.
-  Set `points: true` for a service that delivers to a pickup point.
-- `trackingUrl($number)` returns the carrier's public tracking page as https, or null.
-- `probe()` is the cheapest authenticated request available. Return
-  `HealthResult::pass('Connected as …', [...details])` or `fail()` with a hint the merchant can act on.
+This is what each carrier class declares. Carrier's screens are built from it, so you are never
+offered a feature a carrier cannot do — a live-rate method on a carrier with no rates API will not
+save, and a **Close the day** button only appears for carriers that have one.
 
-Feature methods, and the matching `Feature` constant to declare for each:
+| Carrier | Labels | Live rates | COD | Pickup points | Tracking | Collections | Close day |
+|---|---|---|---|---|---|---|---|
+| UPS | ZPL, PNG | yes | — | search (Access Points) | yes | yes | — |
+| FedEx | PDF, ZPL, PNG | yes | — | search (Hold at Location) | yes | yes | — |
+| USPS | PDF, ZPL, PNG | yes | — | search (Post Offices) | yes | yes | — |
+| TForce Freight | BOL + PDF, ZPL | yes | — | — | yes (PRO) | yes | — |
+| Old Dominion | BOL + PDF | yes | — | — | yes (PRO) | yes | — |
+| Estes Express | BOL + PDF | yes | — | — | yes (PRO) | — | — |
+| XPO | BOL + PDF | yes | — | — | yes (PRO) | — | — |
+| R+L Carriers | BOL + PDF | yes | — | — | yes (PRO) | — | — |
+| SAIA | BOL + PDF | yes | — | — | yes (PRO) | — | — |
+| DPD EasyShip | PDF, ZPL | — | yes | manual (CSV import) | yes | yes | yes |
+| GLS | PDF, ZPL | — | yes | list (shops, lockers) | yes | — | — |
+| BOX NOW | PDF, ZPL | — | yes | list (lockers) | yes | — | — |
+| Hrvatska pošta | PDF | — | yes | list (post offices, Paketomats) | yes | — | — |
+| Magyar Posta | PDF, ZPL | — | yes | list (post offices, PostaPont, lockers) | yes | — | yes (required) |
+| Pošta Slovenije | **no** | — | — | search (opt-in, unofficial) | yes | — | — |
+| ELTA Courier | PDF | — | yes | — | yes | — | — |
+| *Pick up in store* | collection slip (PDF) | — | yes | list (inventory locations) | — | — | — |
+| *Mock Carrier* | PDF, ZPL, PNG | yes | yes | list | yes | yes | yes |
 
-| Feature | Method | Returns |
-|---|---|---|
-| `RATES` | `rate(ShipmentRequest)` | `RateResult::ok([Rate…])` / `failed(msg)` |
-| `LABELS` | `createShipment(ShipmentRequest)` | `ShipmentResult::ok(id, numbers, labels, data)` |
-| `CANCEL` | `cancelShipment(ShipmentRef)` | `ActionResult` |
-| `REPRINT` | `printLabels(ShipmentRef[], format)` | `LabelResult` (one merged doc when the API can) |
-| `TRACKING` | `track(string[] numbers)` | `TrackingInfo[]` (set `trackingBatch(n)`) |
-| `POINTS` | `pickupPoints(PointQuery)` | `PointPage`. Use `points(list|search|manual, types…)`; in `manual` mode, return an empty page and let the merchant import a CSV. |
-| `PICKUPS` | `requestPickup(PickupRequest)` | `ActionResult` with the confirmation as `reference` |
-| `CLOSE_DAY` | `closeDay(ShipmentRef[])` | `ActionResult`, manifest in `data['documents']` |
-| `ADDRESS_VALIDATION` | `validateAddress(Address)` | `AddressResult` |
-| `WEBHOOKS` | `handleWebhook(Request)` | `TrackingInfo[]`; throw `ForbiddenHttpException` on a bad signature |
+Some features are not in the table because fewer carriers have them:
 
-These are flags with no method: `COD`, `RETURNS` (handle `$request->isReturn` in
-`createShipment()`), `INTERNATIONAL`, `MULTI_PIECE` and `FREIGHT`.
+- **Void through the API**: UPS, FedEx, USPS, Old Dominion, XPO, DPD, GLS, BOX NOW, Hrvatska
+  pošta and Magyar Posta (until the day is closed). For anyone else, void in the carrier's portal
+  and press **Mark voided** in Carrier.
+- **Reprint** (fetch labels again from the carrier): USPS, DPD (for about two minutes after
+  printing), GLS, BOX NOW, Hrvatska pošta, Magyar Posta and ELTA. Carrier stores every label it
+  buys, so you rarely need it.
+- **Return labels**: UPS, FedEx and USPS.
+- **Address validation**: UPS, FedEx and USPS.
+- **Tracking webhooks**: none of the add-ons declares them yet; tracking is polled. See
+  [Tracking](/plugins/craft-carrier/docs/tracking).
 
-## Rules the conformance suite enforces
+### The three pickup-point modes
 
-1. **Every request goes through `$this->transport()`.** Call `setBaseUri()` and the default
-   headers in `buildTransport()`. Authenticate through `buildAuth()`, using
-   `auth\OAuth2ClientCredentials`, `ApiKeyAuth` or `BasicAuth`, or your own class extending
-   `auth\BaseAuth`. Never call Guzzle directly. The transport logs, redacts, throttles, retries
-   and can be replaced by a recorded double.
-2. **Classify failures with `ShipmentResult::fromResponse($response)`**:
-   - A 4xx other than 408 or 429 is a refusal: not retryable.
-   - A 429 is throttling: retryable.
-   - A 5xx, 408 or no answer leaves it **uncertain** whether the label exists. Carrier never
-     buys an uncertain label again automatically.
+- **list** — the carrier publishes every point in a country. Carrier syncs it daily into its own
+  table and searches it locally, so checkout never waits on the carrier and the picker keeps
+  working when the carrier is down.
+- **search** — the carrier only answers "what is near here", live. Answers are cached for an hour.
+- **manual** — the carrier has no point API. You import a CSV of points from the carrier.
 
-   A carrier that answers HTTP 200 with an error list (MyGLS, Odoo-style) must check the list and
-   return `ShipmentResult::rejected($message)`.
-3. **Never report success without a tracking number and label bytes.** Labels are raw bytes, so
-   `base64_decode()` what you receive. The format you claim must match the bytes: `%PDF`,
-   `\x89PNG`, or `^XA` for ZPL. Map the carrier's paper options onto `helpers\LabelFormat`, and
-   declare only the formats you can produce. GIF labels must be converted (GD), or the format
-   must not be offered.
-4. **Return tracking numbers in parcel order**: one per parcel for `MULTI_PIECE`, one in total
-   otherwise. Put anything needed later (to void or reprint) in `data`. The engine stores it and
-   hands it back as `ShipmentRef::$data`.
-5. **Map every status onto `base\TrackingStatus`** with `self::mapStatus($code, MAP, default)`.
-   Keep the carrier's raw code in `TrackingEvent::$code`. Parse dates with
-   `self::parseDate($value, 'Europe/Zagreb')` using the zone the carrier means.
-6. **Credentials never reach a message.** The transport redacts non-2xx bodies already, so build
-   error text from the response, not from your settings.
-7. **Survive empty answers.** An empty 200 must give no rates, no points, no tracking and
-   certainly no successful shipment, and must not throw.
+See [Pickup points](/plugins/craft-carrier/docs/pickup-points).
 
-## Returns, points and requests without auth
+### Carriers without live rates
 
-- **Returns**: the request still describes the outbound journey. `shipFrom` is the store and
-  `shipTo` is the customer, so swap the parties the way your API wants when `isReturn` is true.
-- **Points**: `$request->pointId` is the id, and `$request->point` is the `PickupPoint` the
-  customer chose, when Carrier knows it. A search-mode carrier should use it rather than look it
-  up again.
-- **Public endpoints**: pass `'auth' => false` in a request's options to send it without
-  credentials, for example a public point feed on another host.
-- **Token failures**: `auth\OAuth2ClientCredentials::lastError()` holds the token endpoint's own
-  words, and the connection test shows them.
+Most European carriers do not quote prices through their APIs: you agree a price list with them.
+Price those methods with a flat price or a weight table. See
+[Checkout methods](/plugins/craft-carrier/docs/checkout-methods).
 
-## Units and data
+### Pošta Slovenije
 
-Everything arrives in grams and millimetres. Convert on the way out with `helpers\Units`:
-`gramsToKg()`, `gramsToLb()`, `gramsToWholeLb()` (LTL), `mmToCm()` and `mmToIn()`, which all round up.
-Phone numbers arrive normalised (`+385…`); strip the plus if the carrier wants digits only.
-`Address::$houseNumber` is split out for the European carriers. Use `streetLine()` for an API
-that wants a single line. COD is `$request->codAmount` / `codCurrency` / `codReference`. A pickup
-point is `$request->pointId`.
+Pošta Slovenije's API receives shipment data but returns no tracking number or label: you number
+parcels from a barcode range it assigns, and print to a layout that comes with your contract. So
+Carrier does not buy Pošta Slovenije labels. Create the shipment in eSpremnica as you do now, then
+use **Shipped some other way? Record its tracking number** on the order's shipment screen, and
+Carrier tracks it like any other. See [Labels](/plugins/craft-carrier/docs/labels).
 
-## Honesty
+## How the add-ons were built
 
-These add-ons are written against published documentation without live accounts. Put every
-vendor-specific trap in the carrier's class docblock, where someone debugging that carrier will
-find it. Mark anything you could not verify from a primary source with **UNVERIFIED** in that
-docblock, and say so in the README. Don't invent fields to make a test pass. If the documentation
-is silent, write what the best available source shows and flag it.
+Every add-on was written against the carrier's published API documentation, without a live account.
+Anything that could not be confirmed from a primary source is marked **UNVERIFIED** in the
+add-on's README and in the docblock of its carrier class, where someone debugging that carrier will
+find it.
 
-## Fixtures
+**Test each connection against the carrier's sandbox before going live.** Most carriers here have
+one; each carrier's page says which do not and what to do instead.
 
-`tests/fixtures.php` returns `['handle' => callable]`. The callable receives
-`(string $method, string $url, array $options)` and returns a `base\Response`. Answer each
-endpoint with the vendor's own documented sample response, trimmed but structurally faithful, so
-that the happy path is exercised: rates priced, a shipment created with real label bytes
-(`helpers\Pdf::text([...])` stands in for a PDF and a short `^XA…^XZ` for ZPL), tracking mapped,
-points listed and a void accepted. Route on the URL and method. Answer token endpoints with a token.
+## Why the add-ons are free
 
-## Running the suite
+An add-on's whole job is to turn Carrier's canonical shipment request into one carrier's API call,
+and the answer back into labels, tracking numbers and statuses. It does not pack, price, queue,
+retry, store labels, log, schedule or touch Commerce — because Carrier does, once, for all of them.
+There is not enough left in an add-on to charge for, and pricing them separately would mean a
+merchant shipping with four carriers paying four times for the same engine.
 
-```sh
-docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-carrier/tests/integration/carriers.php ups fedex
-docker exec ddev-plugin-testing-web bash -c 'find /var/www/craft-carrier-ups/src -name "*.php" -print0 | xargs -0 -n1 php -l'
-```
+It is the same arrangement [Erpy](https://justinholt.com/plugins/craft-erpy) uses for its ERP
+connectors, for the same reason.
 
-It must finish with `0 failed`.
+## What Carrier checks for every add-on
+
+Carrier ships a conformance suite that drives every installed carrier through the same checks
+against recorded responses. It fails a carrier that:
+
+- advertises a feature it does not implement, or implements one it does not advertise
+- does not put its credentials on the request
+- echoes a secret back in an error message or the log
+- marks a refusal as retryable, or a timeout as a refusal
+- returns a label whose bytes do not match the format it claimed
+- reports success without a tracking number and a label
+- throws, or invents a result, on an empty answer
+
+## Your carrier is not on the list
+
+A carrier is one class. See [Writing a carrier](/plugins/craft-carrier/docs/writing-a-carrier). If you would rather not write
+it, email justin@justinholt.com — the list grows in the order people ask.

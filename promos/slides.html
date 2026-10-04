@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<!-- handmade: hand-tuned deck -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Carrier — Plugin Store promos</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --charcoal: #0f0f1a;
+    --charcoal-light: #1a1a2e;
+    --charcoal-lighter: #252540;
+    --accent: #5C6DF2;
+    --accent-light: #8A97F7;
+    --gold: #ffd166;
+    --off-white: #f0f0f5;
+  }
+
+  html { background: #000; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--off-white);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- slide shell ---------------------------------------------------- */
+  .slide {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 85% 15%, rgba(92, 109, 242, 0.22) 0%, transparent 40%),
+      radial-gradient(ellipse at 65% 5%,  rgba(138, 151, 247, 0.14) 0%, transparent 35%),
+      radial-gradient(ellipse at 15% 85%, rgba(255, 209, 102, 0.07) 0%, transparent 40%),
+      radial-gradient(ellipse at 35% 95%, rgba(92, 109, 242, 0.09) 0%, transparent 35%),
+      linear-gradient(135deg, #0f0f1a 0%, #11132a 30%, #141733 60%, #0f0f1a 100%);
+  }
+
+  /* Oversized watermark, echoing the app icon */
+  .slide::after {
+    content: '';
+    position: absolute;
+    top: -18%;
+    left: -12%;
+    width: 1180px;
+    height: 1180px;
+    background: url('assets/watermark.svg') no-repeat center / contain;
+    opacity: 0.02;
+    pointer-events: none;
+  }
+
+  /* Hairline along the top edge */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--gold), var(--accent));
+    z-index: 5;
+  }
+
+  .cover::after { display: none; }
+
+  .inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 118px 130px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ---- type ------------------------------------------------------------ */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.62);
+    margin-bottom: 34px;
+  }
+  .eyebrow .rule {
+    width: 58px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent-light);
+  }
+
+  h1, h2 {
+    font-family: 'Jersey 20', sans-serif;
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: 0.005em;
+  }
+
+  .gradient-text {
+    background: linear-gradient(100deg, #5C6DF2 0%, #8A97F7 38%, #ffd166 68%, #5C6DF2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .lede {
+    font-size: 34px;
+    line-height: 1.5;
+    color: rgba(240, 240, 245, 0.72);
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  /* ---- cover slide ----------------------------------------------------- */
+  .cover .inner { gap: 90px; }
+  .cover .copy { flex: 1 1 auto; }
+  .cover h1 { font-size: 210px; margin-bottom: 54px; }
+  .cover .tagline {
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 60px;
+    line-height: 1.02;
+    color: var(--off-white);
+    margin-bottom: 40px;
+    white-space: nowrap;
+  }
+  .cover .lede { max-width: 27ch; font-size: 30px; }
+
+  .cover .mark {
+    flex: 0 0 auto;
+    width: 460px;
+    height: 460px;
+    filter: drop-shadow(14px 14px 0 rgba(0, 0, 0, 0.35));
+  }
+  .cover .mark img { width: 100%; height: 100%; display: block; }
+
+  .badges { display: flex; gap: 16px; margin-top: 52px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 26px;
+    font-size: 22px;
+    font-weight: 500;
+    color: rgba(240, 240, 245, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 999px;
+  }
+  .badge .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent-light);
+  }
+
+  /* ---- the before/after statement -------------------------------------- */
+  .statement .inner { flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .statement .eyebrow { justify-content: center; }
+  .swap { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 8px; }
+  .swap .caption {
+    font-size: 26px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.42);
+  }
+  .swap .before {
+    font-size: 92px;
+    color: rgba(240, 240, 245, 0.34);
+    letter-spacing: 0.02em;
+  }
+  .swap .arrow {
+    width: 4px;
+    height: 62px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, rgba(138,151,247,0.15), var(--accent-light));
+    position: relative;
+  }
+  .swap .arrow::after {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: -4px;
+    width: 18px; height: 18px;
+    transform: translateX(-50%) rotate(45deg);
+    border-right: 4px solid var(--accent-light);
+    border-bottom: 4px solid var(--accent-light);
+    border-radius: 2px;
+  }
+  .swap .after {
+    font-size: 150px;
+    line-height: 1;
+    letter-spacing: 0.01em;
+  }
+  .statement .lede { margin-top: 40px; max-width: 34ch; font-size: 32px; }
+
+
+  /* ---- the add-on family ----------------------------------------------- */
+  .family .inner { flex-direction: column; justify-content: center; align-items: stretch; padding-top: 96px; }
+  .family h2 { font-size: 118px; margin-bottom: 22px; }
+  .family .lede { font-size: 30px; max-width: 58ch; margin-bottom: 58px; }
+  .addons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 34px 30px; }
+  .addon { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+  .addon img { width: 132px; height: 132px; display: block; filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
+  .addon b { font-size: 25px; font-weight: 600; color: var(--off-white); }
+  .addon span { font-size: 18px; line-height: 1.35; color: rgba(240, 240, 245, 0.5); }
+
+  /* ---- feature slides -------------------------------------------------- */
+  .feature .inner { align-items: center; }
+  .feature .copy { width: 780px; flex: 0 0 780px; }
+  .feature h2 { font-size: 108px; margin-bottom: 30px; }
+  .feature .lede { max-width: 25ch; }
+
+  .points {
+    list-style: none;
+    margin-top: 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 25px;
+    line-height: 1.4;
+    color: rgba(240, 240, 245, 0.6);
+  }
+  .points li .tick {
+    flex: 0 0 auto;
+    margin-top: 9px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent-light);
+  }
+
+  /* Right-hand panel shared by the token, bucket, flow and table slides */
+  .panel {
+    position: absolute;
+    top: 50%;
+    left: 900px;
+    right: 130px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ---- format tokens --------------------------------------------------- */
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 34px 38px;
+    border-radius: 16px;
+    background: rgba(37, 37, 64, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .token-row .fmt { font-size: 32px; color: rgba(240, 240, 245, 0.55); flex: 1 1 auto; }
+  .token-row .to { color: var(--accent-light); font-size: 30px; flex: 0 0 auto; }
+  .token-row .val { font-size: 34px; color: var(--off-white); flex: 0 0 auto; }
+
+  /* ---- reset buckets --------------------------------------------------- */
+  .buckets { display: flex; gap: 22px; }
+  .bucket {
+    flex: 1 1 0;
+    padding: 38px 30px;
+    border-radius: 18px;
+    background: rgba(37, 37, 64, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+  }
+  .bucket .period {
+    font-size: 26px;
+    letter-spacing: 0.1em;
+    color: rgba(240, 240, 245, 0.5);
+    margin-bottom: 20px;
+  }
+  .bucket .count {
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 92px;
+    line-height: 1;
+    color: var(--accent-light);
+  }
+  .bucket .label { font-size: 21px; color: rgba(240, 240, 245, 0.4); margin-top: 16px; }
+  .bucket.fresh .count { color: var(--gold); }
+
+  .note {
+    font-size: 24px;
+    line-height: 1.5;
+    color: rgba(240, 240, 245, 0.45);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ---- allocation flow -------------------------------------------------- */
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 28px 34px;
+    border-radius: 16px;
+    background: rgba(37, 37, 64, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .step .num {
+    flex: 0 0 auto;
+    width: 58px; height: 58px;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    background: var(--accent);
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 38px;
+    color: #fff;
+  }
+  .step .label { display: block; font-size: 29px; font-weight: 600; color: var(--off-white); }
+  .step .sub { display: block; font-size: 21px; color: rgba(240, 240, 245, 0.55); margin-top: 6px; }
+
+  .lock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: 23px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.42);
+  }
+  .lock .bar { flex: 1 1 auto; height: 1px; background: rgba(255,255,255,0.1); }
+
+  /* ---- backfill table --------------------------------------------------- */
+  .sheet {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+  }
+  .sheet .head {
+    display: flex;
+    padding: 26px 38px;
+    background: rgba(92, 109, 242, 0.18);
+    font-size: 22px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.6);
+  }
+  .sheet .row {
+    display: flex;
+    padding: 26px 38px;
+    background: rgba(37, 37, 64, 0.55);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 31px;
+  }
+  .sheet .c1 { flex: 0 0 300px; color: rgba(240, 240, 245, 0.4); }
+  .sheet .c2 { flex: 0 0 70px; color: var(--accent-light); }
+  .sheet .c3 { flex: 1 1 auto; color: var(--off-white); }
+
+  /* ---- terminal --------------------------------------------------------- */
+  .term {
+    position: absolute;
+    top: 50%;
+    left: 900px;
+    right: -110px;
+    transform: translateY(-50%);
+    border-radius: 14px; overflow: hidden; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .term .chrome {
+    height: 44px;
+    background: #2a2a3e;
+    background-image:
+      radial-gradient(circle at 26px 22px, #ff5f57 6.5px, transparent 7px),
+      radial-gradient(circle at 52px 22px, #ffbd2e 6.5px, transparent 7px),
+      radial-gradient(circle at 78px 22px, #28ca42 6.5px, transparent 7px);
+  }
+  .term .body {
+    background: #12121f;
+    padding: 42px 44px;
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 25px;
+    line-height: 2.0;
+  }
+  .term .prompt { color: var(--accent-light); }
+  .term .cmd { color: var(--off-white); }
+  .term .out { color: rgba(240, 240, 245, 0.45); }
+  .term .ok { color: #4ade80; }
+  .term .warn { color: var(--gold); }
+  .term .blank { display: block; height: 20px; }
+
+  /* ---- footer lockup --------------------------------------------------- */
+  .footer {
+    position: absolute;
+    left: 130px;
+    bottom: 62px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    color: rgba(240, 240, 245, 0.4);
+  }
+  .footer img { width: 40px; height: 40px; border-radius: 9px; }
+  .footer b { color: rgba(240, 240, 245, 0.72); font-weight: 600; }
+
+  /* Only render the requested slide when screenshotting */
+  body.single .slide { display: none; }
+  body.single .slide.active { display: block; }
+
+  /* ---- control-panel screenshot cards -------------------------------
+     Self-contained: these cards must drop into any deck in the family, and the decks
+     do not share a class system. Only --accent and --off-white are relied on, both of
+     which every deck defines, and both have fallbacks. */
+  .slide.cpcard { display: block; }
+  .cpcard .cpc-inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 112px 120px;
+    display: flex;
+    align-items: center;
+    gap: 70px;
+  }
+  .cpcard .cpc-copy { width: 660px; flex: 0 0 660px; }
+
+  .cpcard .cpc-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 34px;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent, #7aa2c8);
+  }
+  .cpcard .cpc-eyebrow i {
+    display: block;
+    width: 62px;
+    height: 3px;
+    background: var(--accent, #7aa2c8);
+    border-radius: 2px;
+  }
+
+  .cpcard .cpc-h2 {
+    font-family: 'Jersey 20', 'Inter', sans-serif;
+    font-size: 88px;
+    line-height: 0.96;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    margin: 0 0 28px;
+    color: var(--off-white, #f0f0f5);
+  }
+
+  .cpcard .cpc-lede {
+    font-size: 33px;
+    line-height: 1.42;
+    color: rgba(240, 240, 245, 0.66);
+    margin: 0;
+  }
+
+  .cpcard .cpc-points { list-style: none; margin: 40px 0 0; padding: 0; }
+  .cpcard .cpc-points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 26px;
+    line-height: 1.5;
+    color: rgba(240, 240, 245, 0.72);
+    margin-bottom: 18px;
+  }
+  .cpcard .cpc-points li::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    margin-top: 14px;
+    border-radius: 50%;
+    background: var(--accent, #7aa2c8);
+  }
+
+  .cpcard .cpc-panel { flex: 1 1 auto; min-width: 0; }
+
+  .cpcard .cpc-frame {
+    border-radius: 14px;
+    overflow: hidden;
+    background: #e4edf6;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55), 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  .cpcard .cpc-chrome {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 18px;
+    background: linear-gradient(180deg, #2a2a3d 0%, #21212f 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+  }
+  .cpcard .cpc-chrome b { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.16); }
+  .cpcard .cpc-chrome b:nth-child(1) { background: #ff5f57; }
+  .cpcard .cpc-chrome b:nth-child(2) { background: #febc2e; }
+  .cpcard .cpc-chrome b:nth-child(3) { background: #28c840; }
+  .cpcard .cpc-chrome em {
+    margin-left: 12px;
+    font-style: normal;
+    font-size: 19px;
+    letter-spacing: 0.02em;
+    color: rgba(240, 240, 245, 0.45);
+  }
+  .cpcard .cpc-frame img { display: block; width: 100%; height: auto; }
+
+  /* A tall capture is anchored to its top — the interesting rows are always first.
+     The fade makes the cut read as "there is more" rather than as a broken edge. */
+  .cpcard .cpc-frame.cpc-clip { max-height: 620px; position: relative; }
+  .cpcard .cpc-frame.cpc-clip img { object-fit: cover; object-position: top center; max-height: 580px; }
+  .cpcard .cpc-frame.cpc-clip::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 130px;
+    background: linear-gradient(180deg, rgba(228,237,246,0) 0%, rgba(228,237,246,0.92) 78%, #e4edf6 100%);
+  }
+
+  .cpcard .cpc-caption {
+    display: block;
+    margin-top: 20px;
+    font-size: 22px;
+    line-height: 1.45;
+    color: rgba(240, 240, 245, 0.52);
+  }
+  .cpcard .cpc-caption b { color: rgba(240, 240, 245, 0.80); font-weight: 600; }
+
+
+  /* ---- Carrier: the add-on family is eight, so four to a row ---------- */
+  .family .inner { justify-content: flex-start; padding-top: 84px; }
+  .family h2 { font-size: 104px; margin-bottom: 18px; }
+  .family .lede { margin-bottom: 44px; font-size: 28px; }
+  .family .addons { grid-template-columns: repeat(4, 1fr); gap: 34px 30px; }
+  .family .addon { gap: 10px; }
+  .family .addon img { width: 120px; height: 120px; }
+  .family .addon span { max-width: 22ch; }
+
+  /* ---- Carrier: the claim ------------------------------------------------ */
+  .guard { display: flex; flex-direction: column; gap: 16px; }
+  .guard .way {
+    display: flex; align-items: center; gap: 22px;
+    padding: 24px 32px; border-radius: 14px;
+    background: rgba(37, 37, 64, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 26px; color: rgba(240, 240, 245, 0.62);
+  }
+  .guard .way .n { flex: 0 0 auto; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-light); }
+  .guard .gate {
+    margin: 6px 0 4px;
+    padding: 28px 34px; border-radius: 16px;
+    background: rgba(92, 109, 242, 0.14);
+    border: 1px solid rgba(138, 151, 247, 0.38);
+    font-size: 26px; line-height: 1.45; color: rgba(240, 240, 245, 0.86);
+  }
+  .guard .gate b { color: var(--accent-light); font-weight: 600; }
+  .outcomes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .outcome { padding: 22px 26px; border-radius: 14px; background: rgba(37, 37, 64, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .outcome b { display: block; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .outcome span { font-size: 20px; line-height: 1.45; color: rgba(240, 240, 245, 0.6); }
+  .outcome.refused b { color: var(--accent-light); }
+  .outcome.uncertain b { color: var(--gold); }
+
+  /* ---- Carrier: the point picker ---------------------------------------- */
+  .picker { border-radius: 18px; overflow: hidden; background: #f6f7fb; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5); color: #1f2333; }
+  .picker .code {
+    padding: 18px 28px; background: #12121f; color: var(--accent-light);
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; font-size: 21px;
+  }
+  .picker .code i { font-style: normal; color: rgba(240, 240, 245, 0.45); }
+  .picker .body { padding: 26px 28px 28px; }
+  .picker .search { display: flex; gap: 12px; margin-bottom: 18px; }
+  .picker .search .in { flex: 1 1 auto; height: 52px; border-radius: 10px; border: 1px solid #cdd3e3; background: #fff; display: flex; align-items: center; padding: 0 18px; font-size: 21px; color: #1f2333; }
+  .picker .search .btn { height: 52px; padding: 0 22px; border-radius: 10px; background: #e3e7f3; display: flex; align-items: center; font-size: 19px; font-weight: 600; color: #3b4064; }
+  .picker .pt { display: grid; grid-template-columns: 26px 1fr auto; gap: 16px; align-items: center; padding: 15px 18px; border-radius: 12px; border: 1px solid #e1e5f0; background: #fff; margin-bottom: 10px; }
+  .picker .pt .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #b8bfd6; }
+  .picker .pt.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(92, 109, 242, 0.25); }
+  .picker .pt.on .radio { border: 7px solid var(--accent); }
+  .picker .pt b { display: block; font-size: 21px; font-weight: 600; }
+  .picker .pt small { display: block; font-size: 17px; color: #6b7190; margin-top: 3px; }
+  .picker .pt .tag { font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 10px; border-radius: 6px; background: #e8eafd; color: #3B4CCA; }
+  .picker .pt .tag.shop { background: #fff3d6; color: #8a5a00; }
+  .picker .veto { margin-top: 14px; padding: 14px 18px; border-radius: 10px; background: #fdecec; color: #9b1c1c; font-size: 18px; line-height: 1.4; }
+  .modes { list-style: none; margin-top: 40px; display: flex; flex-direction: column; gap: 14px; }
+  .modes li { font-size: 24px; line-height: 1.4; color: rgba(240, 240, 245, 0.6); }
+  .modes li b { color: var(--off-white); font-weight: 600; }
+
+  /* ---- Carrier: tracking -------------------------------------------------- */
+  .track { display: flex; flex-direction: column; gap: 0; padding: 30px 36px; border-radius: 18px; background: rgba(37, 37, 64, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .track .ev { display: grid; grid-template-columns: 30px 210px 1fr; align-items: center; gap: 18px; padding: 16px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-size: 25px; }
+  .track .ev:last-of-type { border-bottom: 0; }
+  .track .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--accent-light); margin-left: 4px; }
+  .track .ev.done .dot { background: #4ade80; box-shadow: 0 0 0 6px rgba(74, 222, 128, 0.15); }
+  .track .when { color: rgba(240, 240, 245, 0.45); font-size: 22px; }
+  .track .what { color: var(--off-white); }
+  .track .ev.late { opacity: 0.55; }
+  .track .ev.late .dot { background: transparent; border: 2px dashed var(--gold); }
+  .track .ev.late .what s { text-decoration-color: var(--gold); }
+  .track .ev.late em { font-style: normal; text-decoration: none; display: inline-block; margin-left: 14px; font-size: 19px; color: var(--gold); }
+  .track .order { margin-top: 18px; padding: 20px 24px; border-radius: 12px; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.3); font-size: 22px; color: rgba(240, 240, 245, 0.8); }
+  .track .order b { color: #4ade80; font-weight: 600; }
+
+  /* ---- Carrier: printing -------------------------------------------------- */
+  .sheet .c1 { flex: 0 0 360px; }
+  .sheet .c3 { font-size: 27px; }
+  .sheet .row { font-size: 27px; padding: 22px 34px; }
+  .sheet .row .c1 { color: rgba(240, 240, 245, 0.55); }
+  .sheet .head { padding: 22px 34px; font-size: 19px; }
+  .sheet .head span { font-size: 19px; color: rgba(240, 240, 245, 0.6); }
+</style>
+</head>
+<body>
+
+<!-- 1 · Cover ============================================================ -->
+<section class="slide cover" data-n="1">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Craft Commerce 5 &nbsp;·&nbsp; Shipping</div>
+      <h1 class="gradient-text">Carrier</h1>
+      <p class="tagline">The shipping carrier gateway<br>for Craft&nbsp;Commerce.</p>
+      <p class="lede">Rates, labels, lockers and tracking in one engine &mdash; and a free add-on for every carrier.</p>
+      <div class="badges">
+        <span class="badge"><span class="dot"></span> $149 &nbsp;·&nbsp; $129/year</span>
+        <span class="badge">Craft 5.3+ · Commerce 5 · PHP 8.2+</span>
+      </div>
+    </div>
+    <div class="mark"><img src="assets/icon.svg" alt=""></div>
+  </div>
+</section>
+
+<!-- 2 · The swap ========================================================= -->
+<section class="slide statement" data-n="2">
+  <div class="inner">
+    <div class="eyebrow"><span class="rule"></span> What you actually maintain</div>
+    <div class="swap">
+      <span class="caption">Sixteen carriers, sixteen bespoke builds</span>
+      <span class="before mono">16 carriers</span>
+      <span class="arrow"></span>
+      <span class="caption">Carrier makes that</span>
+      <span class="after mono gradient-text">1 gateway</span>
+    </div>
+    <p class="lede">Packing, pricing, the claim that stops a second label, tracking and the locker
+      picker are the same problem every time. Carrier solves them once; an add-on only translates
+      one carrier&rsquo;s API.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 3 · The add-on family ============================================== -->
+<section class="slide family" data-n="3">
+  <div class="inner">
+    <div class="eyebrow"><span class="rule"></span> Eight add-ons &nbsp;·&nbsp; sixteen carriers</div>
+    <h2 class="gradient-text">A free add-on for every carrier</h2>
+    <p class="lede">Install Carrier once, then the add-on for each carrier you ship with. Mock Carrier and
+      Pick up in store are built in, so checkout works before any account is approved.</p>
+    <div class="addons">
+      <div class="addon"><img src="assets/addons/ups.svg" alt=""><b>UPS</b><span>Rates, labels, Access Points</span></div>
+      <div class="addon"><img src="assets/addons/fedex.svg" alt=""><b>FedEx</b><span>Rates, labels, Hold at Location</span></div>
+      <div class="addon"><img src="assets/addons/usps.svg" alt=""><b>USPS</b><span>USPS APIs v3, Post Office pickup</span></div>
+      <div class="addon"><img src="assets/addons/freight.svg" alt=""><b>LTL Freight</b><span>TForce, ODFL, Estes, XPO, R+L, SAIA</span></div>
+      <div class="addon"><img src="assets/addons/dpd.svg" alt=""><b>DPD</b><span>EasyShip &mdash; Croatia, Slovenia</span></div>
+      <div class="addon"><img src="assets/addons/gls.svg" alt=""><b>GLS</b><span>MyGLS &mdash; seven countries</span></div>
+      <div class="addon"><img src="assets/addons/boxnow.svg" alt=""><b>BOX NOW</b><span>Lockers in five countries</span></div>
+      <div class="addon"><img src="assets/addons/posts.svg" alt=""><b>National Posts</b><span>Croatia, Slovenia, Hungary, Greece</span></div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 4 · The claim ======================================================== -->
+<section class="slide feature" data-n="4">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Claim-first labels</div>
+      <h2>It never buys<br>the same label<br>twice</h2>
+      <p class="lede">A label costs money. So the claim is written before the carrier is called
+        &mdash; and a unique index is the guarantee.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="guard">
+      <div class="way"><span class="n"></span> A merchant double-clicks Buy&nbsp;label</div>
+      <div class="way"><span class="n"></span> A queue job is retried after a timeout</div>
+      <div class="way"><span class="n"></span> A bulk run is started twice</div>
+      <div class="gate">All three find the same row, written as <b>purchasing</b> under one
+        <b>unique claim key</b> &mdash; and stop.</div>
+      <div class="outcomes">
+        <div class="outcome refused"><b>Refused</b><span>The carrier created nothing. Fix the postcode and try again.</span></div>
+        <div class="outcome uncertain"><b>No answer</b><span>The label may exist. It waits on Problems for a person &mdash; never rebought.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 5 · Pickup points ===================================================== -->
+<section class="slide feature" data-n="5">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Lockers and parcel shops</div>
+      <h2>A locker,<br>picked at<br>checkout</h2>
+      <p class="lede">One line in your shipping step. Nothing renders unless the cart is on a pickup-point method.</p>
+      <ul class="modes">
+        <li><b>Synced daily</b> &mdash; GLS, BOX NOW, the posts</li>
+        <li><b>Looked up live</b> &mdash; UPS, FedEx, USPS</li>
+        <li><b>Imported from CSV</b> &mdash; DPD EasyShip</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="picker">
+      <div class="code">{{ craft.carrier.pointPicker(cart) }} <i>&nbsp;{# that&rsquo;s it #}</i></div>
+      <div class="body">
+        <div class="search"><div class="in">28202</div><div class="btn">Search</div><div class="btn">Use my location</div></div>
+        <div class="pt"><span class="radio"></span><span><b>Locker &middot; 4th Street</b><small>0.3 km &middot; open 24/7</small></span><span class="tag">Locker</span></div>
+        <div class="pt on"><span class="radio"></span><span><b>Locker &middot; Trade &amp; Tryon</b><small>0.6 km &middot; open 24/7 &middot; cash on delivery</small></span><span class="tag">Locker</span></div>
+        <div class="pt"><span class="radio"></span><span><b>Corner shop &middot; Elm Avenue</b><small>0.9 km &middot; Mon&ndash;Fri 08:00&ndash;20:00</small></span><span class="tag shop">Shop</span></div>
+        <div class="veto">No point chosen? The payment is refused before money moves &mdash; with a message the customer can act on.</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 6 · Tracking ========================================================== -->
+<section class="slide feature" data-n="6">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Tracking</div>
+      <h2>Written back<br>to the order</h2>
+      <p class="lede">Polled often at first and less as a parcel ages &mdash; from page views, from cron,
+        or pushed by the carrier&rsquo;s webhook.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="track">
+      <div class="ev done"><span class="dot"></span><span class="when">Fri 13:23</span><span class="what">Delivered</span></div>
+      <div class="ev late"><span class="dot"></span><span class="when">Fri 14:02</span><span class="what"><s>In transit</s><em>late scan &mdash; ignored</em></span></div>
+      <div class="ev"><span class="dot"></span><span class="when">Fri 05:23</span><span class="what">Out for delivery</span></div>
+      <div class="ev"><span class="dot"></span><span class="when">Thu 21:23</span><span class="what">Departed depot</span></div>
+      <div class="ev"><span class="dot"></span><span class="when">Thu 13:23</span><span class="what">Label created</span></div>
+      <div class="order">Each scan stored once. A status never moves backwards. When <b>every</b> shipment on
+        the order has arrived, the order moves to your delivered status.</div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 7 · Printing ========================================================== -->
+<section class="slide feature" data-n="7">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Printing</div>
+      <h2>One print job<br>from the order<br>index</h2>
+      <p class="lede">Select the orders, choose Print shipping labels, and get the one document your printer wants.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="sheet">
+      <div class="head"><span class="c1">Labels selected</span><span class="c3">What you get</span></div>
+      <div class="row"><span class="c1">One label</span><span class="c3">The document as it is</span></div>
+      <div class="row"><span class="c1">Several ZPL</span><span class="c3">One ZPL stream</span></div>
+      <div class="row"><span class="c1">Several PNG</span><span class="c3">Four to an A4, or one per 4&times;6</span></div>
+      <div class="row"><span class="c1">PDFs, GLS or DPD</span><span class="c3">One merged sheet from the carrier</span></div>
+      <div class="row"><span class="c1">Anything else</span><span class="c3">A ZIP</span></div>
+    </div>
+    <p class="note">Labels live in the database, not an asset volume &mdash; they carry a customer&rsquo;s
+      address, and Craft Cloud has no shared disk. Pruned after the days you set.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 8 · Console ========================================================== -->
+<section class="slide feature" data-n="8">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Console</div>
+      <h2>Answerable<br>from the<br>command line</h2>
+      <p class="lede">Test an account, see the exact request an order would send, and run tracking and
+        point syncs from cron.</p>
+    </div>
+  </div>
+  <div class="term">
+    <div class="chrome"></div>
+    <div class="body">
+      <div><span class="prompt">$</span> <span class="cmd">php craft carrier/connections/test mockDemo</span></div>
+      <div class="out"><span class="ok">&#10003; Connected to the mock carrier.</span></div>
+      <div class="out">&nbsp;&nbsp;Account: MOCK-001</div>
+      <span class="blank"></span>
+      <div><span class="prompt">$</span> <span class="cmd">php craft carrier/labels/create 1042 --dry-run</span></div>
+      <div class="out">{</div>
+      <div class="out">&nbsp;&nbsp;"serviceCode": "standard",</div>
+      <div class="out">&nbsp;&nbsp;"parcels": [{ "weightG": 1200, &hellip; }],</div>
+      <div class="out">&nbsp;&nbsp;&hellip;</div>
+      <span class="blank"></span>
+      <div><span class="prompt">$</span> <span class="cmd">php craft carrier/tracking/refresh</span></div>
+      <div class="out"><span class="ok">12 shipments due, 4 updated.</span></div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 9 · CP: connections =================================================== -->
+<section class="slide cpcard" data-n="9">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">Every carrier,<br>and what it<br>can do</h2>
+      <p class="cpc-lede">Connections live in the database, not project config &mdash; a sandbox account
+        never reaches production through a deploy.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame cpc-clip">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Carrier &mdash; connections</em></div>
+        <img src="shots/carrier-connections.png" alt="">
+      </figure>
+      <span class="cpc-caption">Connections on the built-in Mock Carrier, then every installed carrier with the features it declares</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 10 · CP: the order's shipment ========================================= -->
+<section class="slide cpcard" data-n="10">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">The whole<br>shipment, on<br>the order</h2>
+      <p class="cpc-lede">Tracking number, charge, label, every scan &mdash; and Refresh, Reprint and Void
+        where the carrier can.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame cpc-clip">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Carrier &mdash; shipping for an order</em></div>
+        <img src="shots/carrier-order.png" alt="">
+      </figure>
+      <span class="cpc-caption">A delivered Mock Carrier shipment with its label and four-scan tracking history</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 11 · CP: rates that fail open ========================================= -->
+<section class="slide cpcard" data-n="11">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> Checkout methods</div>
+      <h2 class="cpc-h2">Rates that<br>fail open</h2>
+      <p class="cpc-lede">A live rate with your markup and rounding. If the carrier is down, the method
+        charges its fallback or hides &mdash; it never fails the checkout.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame cpc-clip">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Carrier &mdash; checkout method</em></div>
+        <img src="shots/carrier-method.png" alt="">
+      </figure>
+      <span class="cpc-caption">Live rate plus 10%, a $7.50 fallback, free over $100, rounded up to the half dollar</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<!-- 12 · CP: problems ===================================================== -->
+<section class="slide cpcard" data-n="12">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">When nobody<br>knows, a person<br>decides</h2>
+      <p class="cpc-lede">A refusal can be retried. A purchase that timed out waits here until someone
+        checks the carrier&rsquo;s portal.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Carrier &mdash; problems</em></div>
+        <img src="shots/carrier-problems.png" alt="">
+      </figure>
+      <span class="cpc-caption">A timed-out purchase with <b>It was created</b> and <b>It was not created</b>, and a refused one with <b>Try again</b></span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Carrier</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-carrier</div>
+</section>
+
+<script>
+  var n = new URLSearchParams(location.search).get('s');
+  if (n) {
+    document.body.classList.add('single');
+    var el = document.querySelector('.slide[data-n="' + n + '"]');
+    if (el) el.classList.add('active');
+  }
+</script>
+</body>
+</html>

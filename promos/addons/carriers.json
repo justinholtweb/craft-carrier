@@ -1,0 +1,2989 @@
+{
+    "boxnow": {
+        "boxnow": {
+            "class": "justinholtweb\\carrierboxnow\\carriers\\BoxNowCarrier",
+            "name": "BOX NOW",
+            "region": "Europe",
+            "description": "BOX NOW parcel-locker delivery in Greece, Cyprus, Bulgaria, Croatia and Slovenia, with cash on delivery and the full locker list.",
+            "setupUrl": "https://www.boxnow.bg/en/partner-api",
+            "capabilities": {
+                "features": [
+                    "labels",
+                    "cancel",
+                    "reprint",
+                    "tracking",
+                    "points",
+                    "cod",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "pdf-a6",
+                    "zpl"
+                ],
+                "pointsMode": "list",
+                "pointTypes": [
+                    "locker"
+                ],
+                "originCountries": [
+                    "HR",
+                    "SI",
+                    "GR",
+                    "BG",
+                    "CY"
+                ],
+                "accessorials": [],
+                "maxParcelWeightG": 20000,
+                "trackingBatchSize": 1,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Labels",
+                "Void labels",
+                "Reprint",
+                "Tracking",
+                "Pickup points",
+                "Cash on delivery",
+                "Multi-piece"
+            ],
+            "services": {
+                "locker": {
+                    "name": "BOX NOW locker",
+                    "international": false,
+                    "points": true
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Sandbox uses BOX NOW’s stage host. Stage parcels are never collected.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "country",
+                    "label": "Country",
+                    "options": {
+                        "HR": "Croatia",
+                        "SI": "Slovenia",
+                        "GR": "Greece",
+                        "BG": "Bulgaria",
+                        "CY": "Cyprus"
+                    },
+                    "instructions": "BOX NOW issues credentials per country and delivers only within it. Slovenia uses the Croatian host unless BOX NOW gave you another URL.",
+                    "required": false,
+                    "default": "HR",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "clientId",
+                    "label": "Client ID",
+                    "instructions": "",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "clientSecret",
+                    "label": "Client secret",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "originLocationId",
+                    "label": "Origin (warehouse) ID",
+                    "instructions": "The id BOX NOW registered for your warehouse — the connection test lists them. Use “any-apm” if you drop parcels into any locker yourself.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "partnerId",
+                    "label": "Partner ID",
+                    "instructions": "Only when one login manages several partners. Sent as X-PartnerID.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "url",
+                    "name": "apiUrl",
+                    "label": "API URL",
+                    "instructions": "Leave blank to use the standard host for the country and environment. Fill it in if BOX NOW gave you a different one.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "https://api-production.boxnow.hr",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "select",
+                    "name": "compartmentSize",
+                    "label": "Locker compartment",
+                    "options": {
+                        "auto": "Smallest that fits the parcel’s dimensions",
+                        "1": "Small (8 × 45 × 60 cm)",
+                        "2": "Medium (17 × 45 × 60 cm)",
+                        "3": "Large (36 × 45 × 60 cm)"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "auto",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "boolean",
+                    "name": "allowReturn",
+                    "label": "Allow the customer to return through BOX NOW",
+                    "instructions": "",
+                    "required": false,
+                    "default": true,
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        }
+    },
+    "carrier": {
+        "mock": {
+            "class": "justinholtweb\\carrier\\carriers\\MockCarrier",
+            "name": "Mock Carrier",
+            "region": "Built in",
+            "description": "A pretend carrier for setting up and testing checkout, labels and tracking without a real account.",
+            "setupUrl": null,
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "cancel",
+                    "reprint",
+                    "tracking",
+                    "points",
+                    "pickups",
+                    "closeDay",
+                    "returns",
+                    "cod",
+                    "addressValidation",
+                    "webhooks",
+                    "international",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "pdf-a6",
+                    "pdf-a4",
+                    "pdf-4x6",
+                    "zpl",
+                    "png"
+                ],
+                "pointsMode": "list",
+                "pointTypes": [
+                    "locker",
+                    "shop"
+                ],
+                "originCountries": [],
+                "accessorials": [
+                    "signature",
+                    "saturdayDelivery",
+                    "liftgateDelivery",
+                    "residentialDelivery"
+                ],
+                "maxParcelWeightG": 31500,
+                "trackingBatchSize": 25,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Void labels",
+                "Reprint",
+                "Tracking",
+                "Pickup points",
+                "Collections",
+                "End-of-day close",
+                "Return labels",
+                "Cash on delivery",
+                "Address validation",
+                "Tracking webhooks",
+                "International",
+                "Multi-piece"
+            ],
+            "services": {
+                "standard": {
+                    "name": "Mock Standard",
+                    "international": true,
+                    "points": false
+                },
+                "express": {
+                    "name": "Mock Express",
+                    "international": true,
+                    "points": false
+                },
+                "locker": {
+                    "name": "Mock Locker",
+                    "international": false,
+                    "points": true
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Sandbox labels are not valid for shipping. Most carriers issue separate credentials for each.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "accountNumber",
+                    "label": "Account number",
+                    "instructions": "Anything. Printed on the label so you can tell sandboxes apart.",
+                    "required": false,
+                    "default": "MOCK-001",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "apiKey",
+                    "label": "API key",
+                    "instructions": "Anything at least six characters long. Never printed, never logged.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "select",
+                    "name": "failMode",
+                    "label": "Simulate a failure",
+                    "options": {
+                        "none": "Never fail",
+                        "refuse": "Refuse every label (a validation error)",
+                        "throttle": "Throttle every label (HTTP 429)",
+                        "timeout": "Time out after sending (the label may exist)",
+                        "down": "Be down for rates, tracking and points"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "none",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "number",
+                    "name": "stageSeconds",
+                    "label": "Seconds per tracking stage",
+                    "instructions": "How quickly a mock parcel moves from label to delivered.",
+                    "required": false,
+                    "default": 3600,
+                    "min": 1,
+                    "max": null,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "webhookSecret",
+                    "label": "Webhook signing secret",
+                    "instructions": "Pushes to the webhook URL must carry an X-Mock-Signature HMAC-SHA256 of the body.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                }
+            ]
+        },
+        "store-pickup": {
+            "class": "justinholtweb\\carrier\\carriers\\StorePickupCarrier",
+            "name": "Pick up in store",
+            "region": "Built in",
+            "description": "Customers collect from one of your Commerce inventory locations. Prints a collection slip instead of a label.",
+            "setupUrl": null,
+            "capabilities": {
+                "features": [
+                    "labels",
+                    "points",
+                    "cod"
+                ],
+                "labelFormats": [
+                    "pdf-a6",
+                    "pdf-a4"
+                ],
+                "pointsMode": "list",
+                "pointTypes": [
+                    "store"
+                ],
+                "originCountries": [],
+                "accessorials": [],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": false
+            },
+            "featureLabels": [
+                "Labels",
+                "Pickup points",
+                "Cash on delivery"
+            ],
+            "services": {
+                "collect": {
+                    "name": "Collect in store",
+                    "international": false,
+                    "points": true
+                }
+            },
+            "fields": [
+                {
+                    "type": "text",
+                    "name": "locationHandles",
+                    "label": "Locations",
+                    "instructions": "Comma-separated inventory location handles customers may collect from. Leave blank for every location with an address.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "hours",
+                    "label": "Opening hours",
+                    "instructions": "Shown in the picker, e.g. “Mon–Sat 9:00–18:00”.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        }
+    },
+    "dpd": {
+        "dpd-easyship": {
+            "class": "justinholtweb\\carrierdpd\\carriers\\DpdEasyShipCarrier",
+            "name": "DPD EasyShip",
+            "region": "Europe",
+            "description": "DPD Croatia and DPD Slovenia through their EasyShip portal (easyship.hr / easyship.si, not Easyship.com): labels, cash on delivery, parcel shops, tracking, collections and the daily manifest.",
+            "setupUrl": "https://easyship.hr/",
+            "capabilities": {
+                "features": [
+                    "labels",
+                    "cancel",
+                    "reprint",
+                    "tracking",
+                    "points",
+                    "pickups",
+                    "closeDay",
+                    "cod",
+                    "international",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "pdf-a4",
+                    "pdf-a6",
+                    "zpl"
+                ],
+                "pointsMode": "manual",
+                "pointTypes": [
+                    "shop",
+                    "locker"
+                ],
+                "originCountries": [
+                    "HR",
+                    "SI"
+                ],
+                "accessorials": [],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": false
+            },
+            "featureLabels": [
+                "Labels",
+                "Void labels",
+                "Reprint",
+                "Tracking",
+                "Pickup points",
+                "Collections",
+                "End-of-day close",
+                "Cash on delivery",
+                "International",
+                "Multi-piece"
+            ],
+            "services": {
+                "home": {
+                    "name": "DPD Home (B2C)",
+                    "international": true,
+                    "points": false
+                },
+                "classic": {
+                    "name": "DPD Classic (B2B)",
+                    "international": true,
+                    "points": false
+                },
+                "pickup": {
+                    "name": "DPD Pickup parcel shop / locker",
+                    "international": false,
+                    "points": true
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "country",
+                    "label": "EasyShip country",
+                    "options": {
+                        "hr": "Croatia (easyship.hr)",
+                        "si": "Slovenia (easyship.si)"
+                    },
+                    "instructions": "Where your DPD contract is. EasyShip is DPD’s own portal, not Easyship.com.",
+                    "required": true,
+                    "default": "hr",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "username",
+                    "label": "EasyShip username",
+                    "instructions": "The login you use at easyship.hr or easyship.si. DPD issues no separate API key, and has no test system.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "password",
+                    "label": "EasyShip password",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "select",
+                    "name": "codSplit",
+                    "label": "Cash on delivery across several parcels",
+                    "options": {
+                        "firstonly": "First parcel only (firstonly)",
+                        "avg": "Averaged across the parcels (avg)",
+                        "all": "All parcels (all)"
+                    },
+                    "instructions": "EasyShip’s parcel_cod_type. Only matters when one COD shipment has more than one parcel.",
+                    "required": false,
+                    "default": "firstonly",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "boolean",
+                    "name": "sendSender",
+                    "label": "Print the ship-from address on labels",
+                    "instructions": "Off: labels show the sender saved in your EasyShip profile.",
+                    "required": false,
+                    "default": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        }
+    },
+    "fedex": {
+        "fedex": {
+            "class": "justinholtweb\\carrierfedex\\carriers\\FedexCarrier",
+            "name": "FedEx",
+            "region": "United States",
+            "description": "FedEx rates, PDF, PNG and ZPL labels, returns, tracking, Hold at Location, pickups and address validation through the FedEx REST APIs.",
+            "setupUrl": "https://developer.fedex.com/api/en-us/home.html",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "cancel",
+                    "tracking",
+                    "points",
+                    "pickups",
+                    "returns",
+                    "addressValidation",
+                    "international",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "pdf-4x6",
+                    "pdf-letter",
+                    "zpl",
+                    "png"
+                ],
+                "pointsMode": "search",
+                "pointTypes": [
+                    "store",
+                    "shop"
+                ],
+                "originCountries": [
+                    "US",
+                    "PR"
+                ],
+                "accessorials": [
+                    "signature",
+                    "adultSignature",
+                    "saturdayDelivery",
+                    "residentialDelivery"
+                ],
+                "maxParcelWeightG": 68038,
+                "trackingBatchSize": 30,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Void labels",
+                "Tracking",
+                "Pickup points",
+                "Collections",
+                "Return labels",
+                "Address validation",
+                "International",
+                "Multi-piece"
+            ],
+            "services": {
+                "FEDEX_GROUND": {
+                    "name": "FedEx Ground",
+                    "international": true,
+                    "points": false
+                },
+                "GROUND_HOME_DELIVERY": {
+                    "name": "FedEx Home Delivery",
+                    "international": false,
+                    "points": false
+                },
+                "FEDEX_EXPRESS_SAVER": {
+                    "name": "FedEx Express Saver",
+                    "international": false,
+                    "points": false
+                },
+                "FEDEX_2_DAY": {
+                    "name": "FedEx 2Day",
+                    "international": false,
+                    "points": false
+                },
+                "FEDEX_2_DAY_AM": {
+                    "name": "FedEx 2Day A.M.",
+                    "international": false,
+                    "points": false
+                },
+                "STANDARD_OVERNIGHT": {
+                    "name": "FedEx Standard Overnight",
+                    "international": false,
+                    "points": false
+                },
+                "PRIORITY_OVERNIGHT": {
+                    "name": "FedEx Priority Overnight",
+                    "international": false,
+                    "points": false
+                },
+                "FIRST_OVERNIGHT": {
+                    "name": "FedEx First Overnight",
+                    "international": false,
+                    "points": false
+                },
+                "FEDEX_INTERNATIONAL_CONNECT_PLUS": {
+                    "name": "FedEx International Connect Plus",
+                    "international": true,
+                    "points": false
+                },
+                "INTERNATIONAL_ECONOMY": {
+                    "name": "FedEx International Economy",
+                    "international": true,
+                    "points": false
+                },
+                "FEDEX_INTERNATIONAL_PRIORITY": {
+                    "name": "FedEx International Priority",
+                    "international": true,
+                    "points": false
+                },
+                "FEDEX_INTERNATIONAL_PRIORITY_EXPRESS": {
+                    "name": "FedEx International Priority Express",
+                    "international": true,
+                    "points": false
+                },
+                "INTERNATIONAL_FIRST": {
+                    "name": "FedEx International First",
+                    "international": true,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "FedEx issues separate keys for its sandbox (apis-sandbox.fedex.com). Sandbox rates are not real and its labels are not valid.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "FedEx project",
+                    "instructions": "Create a project at developer.fedex.com with the Ship, Rate, Track, Address Validation, Locations and Pickup APIs, and link your FedEx account to it.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "clientId",
+                    "label": "API key",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "clientSecret",
+                    "label": "Secret key",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "accountNumber",
+                    "label": "FedEx account number",
+                    "instructions": "The nine-digit account labels are billed to.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "123456789",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Options",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "pickupType",
+                    "label": "How parcels reach FedEx",
+                    "options": {
+                        "DROPOFF_AT_FEDEX_LOCATION": "I drop them off",
+                        "USE_SCHEDULED_PICKUP": "A regular scheduled pickup",
+                        "CONTACT_FEDEX_TO_SCHEDULE": "I book a pickup when I need one"
+                    },
+                    "instructions": "FedEx prices some services differently depending on this.",
+                    "required": false,
+                    "default": "DROPOFF_AT_FEDEX_LOCATION",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "pickupCarrier",
+                    "label": "Pickups are for",
+                    "options": {
+                        "FDXG": "FedEx Ground",
+                        "FDXE": "FedEx Express"
+                    },
+                    "instructions": "FedEx books Express and Ground collections separately. Book the other one in FedEx Ship Manager.",
+                    "required": false,
+                    "default": "FDXG",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "boolean",
+                    "name": "declareValue",
+                    "label": "Declare each parcel’s value",
+                    "instructions": "Raises FedEx’s liability above the included $100. FedEx charges for it.",
+                    "required": false,
+                    "default": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "dutiesPayer",
+                    "label": "International duties and taxes",
+                    "options": {
+                        "RECIPIENT": "Recipient pays (DDU)",
+                        "SENDER": "Bill my FedEx account (DDP)"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "RECIPIENT",
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        }
+    },
+    "freight": {
+        "freight-tforce": {
+            "class": "justinholtweb\\carrierfreight\\carriers\\TforceCarrier",
+            "name": "TForce Freight",
+            "region": "Freight (US)",
+            "description": "LTL quotes, bills of lading with PDF or ZPL labels, pickups and PRO tracking from TForce Freight.",
+            "setupUrl": "https://developer.tforcefreight.com/",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "tracking",
+                    "pickups",
+                    "freight"
+                ],
+                "labelFormats": [
+                    "pdf-letter",
+                    "pdf-4x6",
+                    "zpl"
+                ],
+                "pointsMode": null,
+                "pointTypes": [],
+                "originCountries": [
+                    "US"
+                ],
+                "accessorials": [
+                    "liftgatePickup",
+                    "limitedAccessPickup",
+                    "liftgateDelivery",
+                    "insideDelivery",
+                    "limitedAccessDelivery",
+                    "notify",
+                    "residentialPickup",
+                    "residentialDelivery",
+                    "hazmat"
+                ],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Tracking",
+                "Collections",
+                "Freight (LTL)"
+            ],
+            "services": {
+                "standard": {
+                    "name": "TForce Freight LTL",
+                    "international": false,
+                    "points": false
+                },
+                "guaranteed": {
+                    "name": "TForce Freight LTL Guaranteed",
+                    "international": false,
+                    "points": false
+                },
+                "accelerated": {
+                    "name": "TForce Freight Accelerated Guaranteed",
+                    "international": false,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Sandbox uses TForce’s Customer Integration Environment (same host, api-version cie-v1). CIE rates are not your contract rates.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "clientId",
+                    "label": "Client ID",
+                    "instructions": "developer.tforcefreight.com → Profile → Configure My Client.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "clientSecret",
+                    "label": "Client secret",
+                    "instructions": "Shown only once when the client is created. Store it in an environment variable.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Freight defaults",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "defaultFreightClass",
+                    "label": "Default freight class",
+                    "options": {
+                        "": "None — every handling unit must carry its own class",
+                        "50": "Class 50",
+                        "55": "Class 55",
+                        "60": "Class 60",
+                        "65": "Class 65",
+                        "70": "Class 70",
+                        "77.5": "Class 77.5",
+                        "85": "Class 85",
+                        "92.5": "Class 92.5",
+                        "100": "Class 100",
+                        "110": "Class 110",
+                        "125": "Class 125",
+                        "150": "Class 150",
+                        "175": "Class 175",
+                        "200": "Class 200",
+                        "250": "Class 250",
+                        "300": "Class 300",
+                        "400": "Class 400",
+                        "500": "Class 500"
+                    },
+                    "instructions": "Used for any handling unit that arrives without a freight class. Leave as None to refuse such shipments rather than guess.",
+                    "required": false,
+                    "default": "",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "commodityDescription",
+                    "label": "Commodity description",
+                    "instructions": "Printed on the bill of lading when a handling unit has no description of its own.",
+                    "required": false,
+                    "default": "General merchandise",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                }
+            ]
+        },
+        "freight-odfl": {
+            "class": "justinholtweb\\carrierfreight\\carriers\\OdflCarrier",
+            "name": "Old Dominion",
+            "region": "Freight (US)",
+            "description": "LTL quotes, NMFTA electronic bills of lading, pickups and PRO tracking from Old Dominion Freight Line.",
+            "setupUrl": "https://www.odfl.com/us/en/resources/shipping-api-integrations.html",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "cancel",
+                    "tracking",
+                    "pickups",
+                    "freight"
+                ],
+                "labelFormats": [
+                    "pdf-letter"
+                ],
+                "pointsMode": null,
+                "pointTypes": [],
+                "originCountries": [
+                    "US",
+                    "CA"
+                ],
+                "accessorials": [
+                    "liftgatePickup",
+                    "liftgateDelivery",
+                    "residentialPickup",
+                    "residentialDelivery",
+                    "insideDelivery",
+                    "limitedAccessPickup",
+                    "limitedAccessDelivery",
+                    "appointment",
+                    "notify",
+                    "hazmat"
+                ],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Void labels",
+                "Tracking",
+                "Collections",
+                "Freight (LTL)"
+            ],
+            "services": {
+                "standard": {
+                    "name": "Old Dominion LTL",
+                    "international": false,
+                    "points": false
+                },
+                "guaranteed-pm": {
+                    "name": "Old Dominion Guaranteed by 5 PM",
+                    "international": false,
+                    "points": false
+                },
+                "guaranteed-noon": {
+                    "name": "Old Dominion Guaranteed by Noon",
+                    "international": false,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Sandbox uses ODFL’s QA host (apiq.odfl.com). Ask API@odfl.com for QA access.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "username",
+                    "label": "ODFL.com username",
+                    "instructions": "",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "password",
+                    "label": "ODFL.com password",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "accountNumber",
+                    "label": "ODFL account number",
+                    "instructions": "Your bill-to account, for contract pricing. Digits only.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Freight defaults",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "defaultFreightClass",
+                    "label": "Default freight class",
+                    "options": {
+                        "": "None — every handling unit must carry its own class",
+                        "50": "Class 50",
+                        "55": "Class 55",
+                        "60": "Class 60",
+                        "65": "Class 65",
+                        "70": "Class 70",
+                        "77.5": "Class 77.5",
+                        "85": "Class 85",
+                        "92.5": "Class 92.5",
+                        "100": "Class 100",
+                        "110": "Class 110",
+                        "125": "Class 125",
+                        "150": "Class 150",
+                        "175": "Class 175",
+                        "200": "Class 200",
+                        "250": "Class 250",
+                        "300": "Class 300",
+                        "400": "Class 400",
+                        "500": "Class 500"
+                    },
+                    "instructions": "Used for any handling unit that arrives without a freight class. Leave as None to refuse such shipments rather than guess.",
+                    "required": false,
+                    "default": "",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "commodityDescription",
+                    "label": "Commodity description",
+                    "instructions": "Printed on the bill of lading when a handling unit has no description of its own.",
+                    "required": false,
+                    "default": "General merchandise",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                }
+            ]
+        },
+        "freight-estes": {
+            "class": "justinholtweb\\carrierfreight\\carriers\\EstesCarrier",
+            "name": "Estes Express",
+            "region": "Freight (US)",
+            "description": "LTL quotes, NMFTA electronic bills of lading with labels, and PRO tracking from Estes Express Lines.",
+            "setupUrl": "https://developer.estes-express.com/",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "tracking",
+                    "freight"
+                ],
+                "labelFormats": [
+                    "pdf-letter",
+                    "pdf-4x6"
+                ],
+                "pointsMode": null,
+                "pointTypes": [],
+                "originCountries": [
+                    "US",
+                    "CA"
+                ],
+                "accessorials": [
+                    "liftgatePickup",
+                    "liftgateDelivery",
+                    "residentialPickup",
+                    "residentialDelivery",
+                    "insideDelivery",
+                    "limitedAccessPickup",
+                    "appointment",
+                    "hazmat"
+                ],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Tracking",
+                "Freight (LTL)"
+            ],
+            "services": {
+                "standard": {
+                    "name": "Estes LTL Standard",
+                    "international": false,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Sandbox uses uat-cloudapi.estes-express.com. Estes issues separate credentials and API keys for each environment.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "apiKey",
+                    "label": "API key",
+                    "instructions": "Created once per environment with POST /v1/api-key using the client ID and secret Estes emailed you (WebSupport@estes-express.com). That call replaces the emailed secret.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "username",
+                    "label": "MyEstes username",
+                    "instructions": "",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "password",
+                    "label": "MyEstes password",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "accountNumber",
+                    "label": "Estes account number",
+                    "instructions": "Your shipper account, for contract pricing.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Freight defaults",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "defaultFreightClass",
+                    "label": "Default freight class",
+                    "options": {
+                        "": "None — every handling unit must carry its own class",
+                        "50": "Class 50",
+                        "55": "Class 55",
+                        "60": "Class 60",
+                        "65": "Class 65",
+                        "70": "Class 70",
+                        "77.5": "Class 77.5",
+                        "85": "Class 85",
+                        "92.5": "Class 92.5",
+                        "100": "Class 100",
+                        "110": "Class 110",
+                        "125": "Class 125",
+                        "150": "Class 150",
+                        "175": "Class 175",
+                        "200": "Class 200",
+                        "250": "Class 250",
+                        "300": "Class 300",
+                        "400": "Class 400",
+                        "500": "Class 500"
+                    },
+                    "instructions": "Used for any handling unit that arrives without a freight class. Leave as None to refuse such shipments rather than guess.",
+                    "required": false,
+                    "default": "",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "commodityDescription",
+                    "label": "Commodity description",
+                    "instructions": "Printed on the bill of lading when a handling unit has no description of its own.",
+                    "required": false,
+                    "default": "General merchandise",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                }
+            ]
+        },
+        "freight-xpo": {
+            "class": "justinholtweb\\carrierfreight\\carriers\\XpoCarrier",
+            "name": "XPO",
+            "region": "Freight (US)",
+            "description": "LTL quotes, bills of lading with shipping labels, voids and PRO tracking from XPO.",
+            "setupUrl": "https://www.xpo.com/help-center/api/",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "cancel",
+                    "tracking",
+                    "freight"
+                ],
+                "labelFormats": [
+                    "pdf-letter"
+                ],
+                "pointsMode": null,
+                "pointTypes": [],
+                "originCountries": [
+                    "US",
+                    "CA"
+                ],
+                "accessorials": [
+                    "liftgatePickup",
+                    "liftgateDelivery",
+                    "residentialPickup",
+                    "residentialDelivery",
+                    "insideDelivery",
+                    "notify",
+                    "appointment",
+                    "hazmat"
+                ],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": false
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Void labels",
+                "Tracking",
+                "Freight (LTL)"
+            ],
+            "services": {
+                "standard": {
+                    "name": "XPO LTL",
+                    "international": false,
+                    "points": false
+                },
+                "guaranteed": {
+                    "name": "XPO Guaranteed",
+                    "international": false,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "text",
+                    "name": "consumerKey",
+                    "label": "Consumer key",
+                    "instructions": "Email LTLWebAPISupport@xpo.com from your registered XPO web user to subscribe.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "consumerSecret",
+                    "label": "Consumer secret",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "username",
+                    "label": "XPO LTL web username",
+                    "instructions": "",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "password",
+                    "label": "XPO LTL web password",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "accountNumber",
+                    "label": "XPO account (acctInstId)",
+                    "instructions": "Your shipper account instance id, for contract pricing.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "boolean",
+                    "name": "testMode",
+                    "label": "Test mode",
+                    "instructions": "XPO has no sandbox. Test mode sends testMode=Y on bills of lading; rating and tracking always use production.",
+                    "required": false,
+                    "default": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Freight defaults",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "defaultFreightClass",
+                    "label": "Default freight class",
+                    "options": {
+                        "": "None — every handling unit must carry its own class",
+                        "50": "Class 50",
+                        "55": "Class 55",
+                        "60": "Class 60",
+                        "65": "Class 65",
+                        "70": "Class 70",
+                        "77.5": "Class 77.5",
+                        "85": "Class 85",
+                        "92.5": "Class 92.5",
+                        "100": "Class 100",
+                        "110": "Class 110",
+                        "125": "Class 125",
+                        "150": "Class 150",
+                        "175": "Class 175",
+                        "200": "Class 200",
+                        "250": "Class 250",
+                        "300": "Class 300",
+                        "400": "Class 400",
+                        "500": "Class 500"
+                    },
+                    "instructions": "Used for any handling unit that arrives without a freight class. Leave as None to refuse such shipments rather than guess.",
+                    "required": false,
+                    "default": "",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "commodityDescription",
+                    "label": "Commodity description",
+                    "instructions": "Printed on the bill of lading when a handling unit has no description of its own.",
+                    "required": false,
+                    "default": "General merchandise",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                }
+            ]
+        },
+        "freight-rl": {
+            "class": "justinholtweb\\carrierfreight\\carriers\\RlCarrier",
+            "name": "R+L Carriers",
+            "region": "Freight (US)",
+            "description": "LTL quotes, NMFTA electronic bills of lading with labels, and PRO tracking from R+L Carriers.",
+            "setupUrl": "https://technology.rlcarriers.com/api-documentation/getting-started/",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "tracking",
+                    "freight"
+                ],
+                "labelFormats": [
+                    "pdf-letter"
+                ],
+                "pointsMode": null,
+                "pointTypes": [],
+                "originCountries": [
+                    "US",
+                    "CA"
+                ],
+                "accessorials": [
+                    "liftgatePickup",
+                    "liftgateDelivery",
+                    "residentialPickup",
+                    "residentialDelivery",
+                    "insideDelivery",
+                    "limitedAccessPickup",
+                    "limitedAccessDelivery",
+                    "appointment",
+                    "hazmat"
+                ],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": false
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Tracking",
+                "Freight (LTL)"
+            ],
+            "services": {
+                "standard": {
+                    "name": "R+L Standard LTL",
+                    "international": false,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "text",
+                    "name": "apiKey",
+                    "label": "API key",
+                    "instructions": "rlcarriers.com → Resources → API Overview → Access API Key. R+L has no test environment: every bill of lading is real.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Freight defaults",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "defaultFreightClass",
+                    "label": "Default freight class",
+                    "options": {
+                        "": "None — every handling unit must carry its own class",
+                        "50": "Class 50",
+                        "55": "Class 55",
+                        "60": "Class 60",
+                        "65": "Class 65",
+                        "70": "Class 70",
+                        "77.5": "Class 77.5",
+                        "85": "Class 85",
+                        "92.5": "Class 92.5",
+                        "100": "Class 100",
+                        "110": "Class 110",
+                        "125": "Class 125",
+                        "150": "Class 150",
+                        "175": "Class 175",
+                        "200": "Class 200",
+                        "250": "Class 250",
+                        "300": "Class 300",
+                        "400": "Class 400",
+                        "500": "Class 500"
+                    },
+                    "instructions": "Used for any handling unit that arrives without a freight class. Leave as None to refuse such shipments rather than guess.",
+                    "required": false,
+                    "default": "",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "commodityDescription",
+                    "label": "Commodity description",
+                    "instructions": "Printed on the bill of lading when a handling unit has no description of its own.",
+                    "required": false,
+                    "default": "General merchandise",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                }
+            ]
+        },
+        "freight-saia": {
+            "class": "justinholtweb\\carrierfreight\\carriers\\SaiaCarrier",
+            "name": "SAIA",
+            "region": "Freight (US)",
+            "description": "LTL quotes, NMFTA electronic bills of lading with labels, and PRO tracking from SAIA. Rating and tracking responses are unverified.",
+            "setupUrl": "https://saiaprodapi.developer.azure-api.net/",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "tracking",
+                    "freight"
+                ],
+                "labelFormats": [
+                    "pdf-letter",
+                    "pdf-4x6"
+                ],
+                "pointsMode": null,
+                "pointTypes": [],
+                "originCountries": [
+                    "US"
+                ],
+                "accessorials": [],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Tracking",
+                "Freight (LTL)"
+            ],
+            "services": {
+                "standard": {
+                    "name": "SAIA LTL Standard",
+                    "international": false,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Sandbox uses SAIA’s pilot gateway (saiapilotapi.azure-api.net), which has its own subscription keys.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Saia Secure login",
+                    "instructions": "Your saiasecure.com account. Sent in the body of rate requests and as Basic auth for tracking.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "username",
+                    "label": "Saia Secure username",
+                    "instructions": "",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "password",
+                    "label": "Saia Secure password",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Subscription keys",
+                    "instructions": "One per product, from the developer portal: Products → subscribe → primary key.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "rateQuoteKey",
+                    "label": "Rate Quote key (RQ-Key)",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "trackingKey",
+                    "label": "Customer Tracking REST key (Tracking-Key)",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "bolKey",
+                    "label": "Bill of Lading key (Ocp-Apim-Subscription-Key)",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Freight defaults",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "defaultFreightClass",
+                    "label": "Default freight class",
+                    "options": {
+                        "": "None — every handling unit must carry its own class",
+                        "50": "Class 50",
+                        "55": "Class 55",
+                        "60": "Class 60",
+                        "65": "Class 65",
+                        "70": "Class 70",
+                        "77.5": "Class 77.5",
+                        "85": "Class 85",
+                        "92.5": "Class 92.5",
+                        "100": "Class 100",
+                        "110": "Class 110",
+                        "125": "Class 125",
+                        "150": "Class 150",
+                        "175": "Class 175",
+                        "200": "Class 200",
+                        "250": "Class 250",
+                        "300": "Class 300",
+                        "400": "Class 400",
+                        "500": "Class 500"
+                    },
+                    "instructions": "Used for any handling unit that arrives without a freight class. Leave as None to refuse such shipments rather than guess.",
+                    "required": false,
+                    "default": "",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "commodityDescription",
+                    "label": "Commodity description",
+                    "instructions": "Printed on the bill of lading when a handling unit has no description of its own.",
+                    "required": false,
+                    "default": "General merchandise",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                }
+            ]
+        }
+    },
+    "gls": {
+        "gls": {
+            "class": "justinholtweb\\carriergls\\carriers\\GlsCarrier",
+            "name": "GLS",
+            "region": "Europe",
+            "description": "GLS through MyGLS in Croatia, Hungary, Czechia, Romania, Slovenia, Slovakia and Serbia: labels, cash on delivery, parcel shops and lockers, tracking.",
+            "setupUrl": "https://api.mygls.hr/index_en.html",
+            "capabilities": {
+                "features": [
+                    "labels",
+                    "cancel",
+                    "reprint",
+                    "tracking",
+                    "points",
+                    "cod",
+                    "international",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "pdf-a4",
+                    "pdf-a6",
+                    "zpl"
+                ],
+                "pointsMode": "list",
+                "pointTypes": [
+                    "locker",
+                    "shop"
+                ],
+                "originCountries": [
+                    "HR",
+                    "HU",
+                    "CZ",
+                    "RO",
+                    "SI",
+                    "SK",
+                    "RS"
+                ],
+                "accessorials": [
+                    "saturdayDelivery",
+                    "notify"
+                ],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 100,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Labels",
+                "Void labels",
+                "Reprint",
+                "Tracking",
+                "Pickup points",
+                "Cash on delivery",
+                "International",
+                "Multi-piece"
+            ],
+            "services": {
+                "parcel": {
+                    "name": "GLS BusinessParcel",
+                    "international": true,
+                    "points": false
+                },
+                "psd": {
+                    "name": "GLS ParcelShop / ParcelLocker",
+                    "international": false,
+                    "points": true
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "country",
+                    "label": "MyGLS country",
+                    "options": {
+                        "hr": "Croatia",
+                        "hu": "Hungary",
+                        "cz": "Czechia",
+                        "ro": "Romania",
+                        "si": "Slovenia",
+                        "sk": "Slovakia",
+                        "rs": "Serbia"
+                    },
+                    "instructions": "The GLS country your contract is with. Each country runs its own MyGLS, with its own logins.",
+                    "required": true,
+                    "default": "hr",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "The MyGLS test system (api.test.mygls.…) needs separate test credentials from your local GLS office.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "username",
+                    "label": "MyGLS username",
+                    "instructions": "The email address you sign in to MyGLS with.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "password",
+                    "label": "MyGLS password",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "number",
+                    "name": "clientNumber",
+                    "label": "Client number",
+                    "instructions": "Your GLS client number, from the contract. It goes on every parcel.",
+                    "required": true,
+                    "default": 0,
+                    "min": 1,
+                    "max": null,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "a4Layout",
+                    "label": "A4 sheet layout",
+                    "options": {
+                        "A4_2x2": "Four labels in a 2 × 2 grid",
+                        "A4_4x1": "Four labels stacked"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "A4_2x2",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "zplPrinter",
+                    "label": "ZPL printer resolution",
+                    "options": {
+                        "ThermoZPL": "203 dpi",
+                        "ThermoZPL_300DPI": "300 dpi"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "ThermoZPL",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "boolean",
+                    "name": "hidePhone",
+                    "label": "Hide phone numbers on labels",
+                    "instructions": "",
+                    "required": false,
+                    "default": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        }
+    },
+    "posts": {
+        "posta-hr": {
+            "class": "justinholtweb\\carrierposts\\carriers\\HrvatskaPostaCarrier",
+            "name": "Hrvatska pošta",
+            "region": "Europe",
+            "description": "Croatia’s national post: Paket 24 to the door, a post office or a Paketomat, with cash on delivery.",
+            "setupUrl": "https://www.posta.hr/paket24",
+            "capabilities": {
+                "features": [
+                    "labels",
+                    "cancel",
+                    "reprint",
+                    "tracking",
+                    "points",
+                    "cod",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "pdf-a6",
+                    "pdf-a4"
+                ],
+                "pointsMode": "list",
+                "pointTypes": [
+                    "locker",
+                    "postOffice"
+                ],
+                "originCountries": [
+                    "HR"
+                ],
+                "accessorials": [],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 20,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Labels",
+                "Void labels",
+                "Reprint",
+                "Tracking",
+                "Pickup points",
+                "Cash on delivery",
+                "Multi-piece"
+            ],
+            "services": {
+                "26": {
+                    "name": "Paket 24 D+1",
+                    "international": false,
+                    "points": false
+                },
+                "29": {
+                    "name": "Paket 24 D+2",
+                    "international": false,
+                    "points": false
+                },
+                "32": {
+                    "name": "Paket 24 D+3",
+                    "international": false,
+                    "points": false
+                },
+                "38": {
+                    "name": "Paket 24 D+4",
+                    "international": false,
+                    "points": false
+                },
+                "26-PAK": {
+                    "name": "Paket 24 D+1 to a Paketomat",
+                    "international": false,
+                    "points": true
+                },
+                "26-PU": {
+                    "name": "Paket 24 D+1 to a post office",
+                    "international": false,
+                    "points": true
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Test uses dxwebapit.posta.hr. Hrvatska pošta issues separate credentials for each environment.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "username",
+                    "label": "Username",
+                    "instructions": "The API username from your Hrvatska pošta contract manager.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "password",
+                    "label": "Password",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Hand-over",
+                    "instructions": "How parcels reach Hrvatska pošta. Your server must be able to reach ports 9000 and 9020 on posta.hr; many shared hosts block them.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "pickupType",
+                    "label": "Parcels are handed over",
+                    "options": {
+                        "1": "Collected from the ship-from address",
+                        "2": "At a post office",
+                        "3": "At a Paketomat"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": 1,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "senderPickupCenter",
+                    "label": "Hand-over post office or Paketomat code",
+                    "instructions": "Required when parcels are handed over at a post office or Paketomat.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "select",
+                    "name": "defaultLockerSize",
+                    "label": "Paketomat compartment for parcels without dimensions",
+                    "options": {
+                        "M": "M",
+                        "S": "S",
+                        "X": "X",
+                        "L": "L"
+                    },
+                    "instructions": "Parcels with dimensions get the smallest compartment they fit.",
+                    "required": false,
+                    "default": "M",
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        },
+        "posta-si": {
+            "class": "justinholtweb\\carrierposts\\carriers\\PostaSlovenijeCarrier",
+            "name": "Pošta Slovenije",
+            "region": "Europe",
+            "description": "Slovenia’s national post: tracking for parcels you send with Pošta Slovenije’s own tools. Labels are not available through an API.",
+            "setupUrl": "https://www.posta.si/api-za-sledenje-faq",
+            "capabilities": {
+                "features": [
+                    "tracking",
+                    "points"
+                ],
+                "labelFormats": [],
+                "pointsMode": "search",
+                "pointTypes": [
+                    "locker",
+                    "postOffice",
+                    "shop"
+                ],
+                "originCountries": [
+                    "SI"
+                ],
+                "accessorials": [],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 10,
+                "sandbox": false
+            },
+            "featureLabels": [
+                "Tracking",
+                "Pickup points"
+            ],
+            "services": [],
+            "fields": [
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Tracking API",
+                    "instructions": "Three values from your Pošta Slovenije contract manager for the tracking API (eSledenje). They are separate from your eSpremnica credentials.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "trackingUser",
+                    "label": "Tracking user",
+                    "instructions": "A GUID. Store it in an environment variable.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "trackingPassword",
+                    "label": "Tracking password",
+                    "instructions": "A GUID. Store it in an environment variable.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "trackingUserToken",
+                    "label": "User token",
+                    "instructions": "The long user token Pošta Slovenije issued, exactly as given, without quotes.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Pickup points",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "boolean",
+                    "name": "usePointFeed",
+                    "label": "Use the unofficial posta.si point finder",
+                    "instructions": "Pošta Slovenije has no public pickup-point API. This uses the JSON behind the office finder on posta.si, which is not a supported interface and may change without notice. Leave it off unless you offer Paketomat delivery and accept that risk.",
+                    "required": false,
+                    "default": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        },
+        "posta-hu": {
+            "class": "justinholtweb\\carrierposts\\carriers\\MagyarPostaCarrier",
+            "name": "Magyar Posta (MPL)",
+            "region": "Europe",
+            "description": "Hungary’s national post: MPL Business and Postal Parcels to the door, a post office, PostaPont or a parcel terminal, with cash on delivery.",
+            "setupUrl": "https://devportal.posta.hu/en/documentation",
+            "capabilities": {
+                "features": [
+                    "labels",
+                    "cancel",
+                    "reprint",
+                    "tracking",
+                    "points",
+                    "closeDay",
+                    "cod",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "pdf-a6",
+                    "pdf-a4",
+                    "zpl"
+                ],
+                "pointsMode": "list",
+                "pointTypes": [
+                    "locker",
+                    "shop",
+                    "postOffice"
+                ],
+                "originCountries": [
+                    "HU"
+                ],
+                "accessorials": [],
+                "maxParcelWeightG": 40000,
+                "trackingBatchSize": 1,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Labels",
+                "Void labels",
+                "Reprint",
+                "Tracking",
+                "Pickup points",
+                "End-of-day close",
+                "Cash on delivery",
+                "Multi-piece"
+            ],
+            "services": {
+                "A_175_UZL": {
+                    "name": "MPL Business Parcel",
+                    "international": false,
+                    "points": false
+                },
+                "A_175_UZL-CS": {
+                    "name": "MPL Business Parcel to a parcel terminal",
+                    "international": false,
+                    "points": true
+                },
+                "A_175_UZL-PP": {
+                    "name": "MPL Business Parcel to a PostaPont",
+                    "international": false,
+                    "points": true
+                },
+                "A_175_UZL-PM": {
+                    "name": "MPL Business Parcel to a post office",
+                    "international": false,
+                    "points": true
+                },
+                "A_177_MPC": {
+                    "name": "MPL Postal Parcel",
+                    "international": false,
+                    "points": false
+                },
+                "A_177_MPC-PM": {
+                    "name": "MPL Postal Parcel to a post office",
+                    "international": false,
+                    "points": true
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "The sandbox is a mock service with weaker validation. Each environment has its own key and secret (devportal → Applications).",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "clientId",
+                    "label": "API key",
+                    "instructions": "The consumer key of your devportal application.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "clientSecret",
+                    "label": "API secret",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "accountingCode",
+                    "label": "Customer code",
+                    "instructions": "Sent as X-Accounting-Code on every request. It maps one-to-one to the API key.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "agreementCode",
+                    "label": "Agreement code",
+                    "instructions": "The contract (agreement) the parcels are posted under, printed on your MPL contract.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "bankAccount",
+                    "label": "Bank account for COD",
+                    "instructions": "Where MPL pays collected cash on delivery, e.g. 11112222-33334444-00000000.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "select",
+                    "name": "paymentMode",
+                    "label": "COD paid out",
+                    "options": {
+                        "UV_AT": "By bank transfer",
+                        "UV_KP": "In cash"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "UV_AT",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "webshopId",
+                    "label": "Webshop id",
+                    "instructions": "Any short id; MPL echoes it back so one account can serve several shops.",
+                    "required": false,
+                    "default": "1",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "select",
+                    "name": "packageRetention",
+                    "label": "Days held for collection",
+                    "options": {
+                        "5": "5 days",
+                        "10": "10 days"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": 5,
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        },
+        "elta": {
+            "class": "justinholtweb\\carrierposts\\carriers\\EltaCarrier",
+            "name": "ELTA Courier",
+            "region": "Europe",
+            "description": "Greece’s postal courier: vouchers with cash on delivery and tracking, through ELTA Courier’s contract web services.",
+            "setupUrl": "https://www.elta-courier.gr/",
+            "capabilities": {
+                "features": [
+                    "labels",
+                    "reprint",
+                    "tracking",
+                    "cod"
+                ],
+                "labelFormats": [
+                    "pdf-a6",
+                    "pdf-a4"
+                ],
+                "pointsMode": null,
+                "pointTypes": [],
+                "originCountries": [
+                    "GR"
+                ],
+                "accessorials": [],
+                "maxParcelWeightG": 0,
+                "trackingBatchSize": 1,
+                "sandbox": false
+            },
+            "featureLabels": [
+                "Labels",
+                "Reprint",
+                "Tracking",
+                "Cash on delivery"
+            ],
+            "services": {
+                "standard": {
+                    "name": "ELTA Courier",
+                    "international": false,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Web services account",
+                    "instructions": "From your ELTA Courier contract (ask your branch, +30 210 607 3000 or info@elta-courier.gr). The service uses plain HTTP: these values cross the internet unencrypted.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "userCode",
+                    "label": "User code",
+                    "instructions": "Digits only. The test account is 9999999.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "password",
+                    "label": "Password",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "customerCode",
+                    "label": "Customer (sender) code",
+                    "instructions": "Your ELTA Courier customer code. The test account is 999999999.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "customerSubCode",
+                    "label": "Customer sub-code",
+                    "instructions": "Only if ELTA Courier gave you one for this dispatch point.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "serviceCode",
+                    "label": "Service code",
+                    "instructions": "The pel_service value from your contract. 1 is the standard service.",
+                    "required": false,
+                    "default": "1",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Endpoint",
+                    "instructions": "Change these only if your contract WSDL names a different address.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "endpoint",
+                    "label": "Endpoint",
+                    "instructions": "Your host must allow outbound connections to port 9003.",
+                    "required": false,
+                    "default": "http://212.205.47.226:9003",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                }
+            ]
+        }
+    },
+    "ups": {
+        "ups": {
+            "class": "justinholtweb\\carrierups\\carriers\\UpsCarrier",
+            "name": "UPS",
+            "region": "United States",
+            "description": "UPS rates, ZPL and PNG labels, returns, tracking, Access Points, pickups and address validation through the UPS REST APIs.",
+            "setupUrl": "https://developer.ups.com/",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "cancel",
+                    "tracking",
+                    "points",
+                    "pickups",
+                    "returns",
+                    "addressValidation",
+                    "international",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "zpl",
+                    "png"
+                ],
+                "pointsMode": "search",
+                "pointTypes": [
+                    "shop",
+                    "locker"
+                ],
+                "originCountries": [
+                    "US",
+                    "PR"
+                ],
+                "accessorials": [
+                    "signature",
+                    "adultSignature",
+                    "saturdayDelivery",
+                    "residentialDelivery"
+                ],
+                "maxParcelWeightG": 68038,
+                "trackingBatchSize": 10,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Void labels",
+                "Tracking",
+                "Pickup points",
+                "Collections",
+                "Return labels",
+                "Address validation",
+                "International",
+                "Multi-piece"
+            ],
+            "services": {
+                "03": {
+                    "name": "UPS Ground",
+                    "international": false,
+                    "points": false
+                },
+                "12": {
+                    "name": "UPS 3 Day Select",
+                    "international": false,
+                    "points": false
+                },
+                "02": {
+                    "name": "UPS 2nd Day Air",
+                    "international": false,
+                    "points": false
+                },
+                "59": {
+                    "name": "UPS 2nd Day Air A.M.",
+                    "international": false,
+                    "points": false
+                },
+                "13": {
+                    "name": "UPS Next Day Air Saver",
+                    "international": false,
+                    "points": false
+                },
+                "01": {
+                    "name": "UPS Next Day Air",
+                    "international": false,
+                    "points": false
+                },
+                "14": {
+                    "name": "UPS Next Day Air Early",
+                    "international": false,
+                    "points": false
+                },
+                "93": {
+                    "name": "UPS Ground Saver",
+                    "international": false,
+                    "points": false
+                },
+                "92": {
+                    "name": "UPS Ground Saver (under 1 lb)",
+                    "international": false,
+                    "points": false
+                },
+                "11": {
+                    "name": "UPS Standard (Canada, Mexico)",
+                    "international": true,
+                    "points": false
+                },
+                "65": {
+                    "name": "UPS Worldwide Saver",
+                    "international": true,
+                    "points": false
+                },
+                "08": {
+                    "name": "UPS Worldwide Expedited",
+                    "international": true,
+                    "points": false
+                },
+                "07": {
+                    "name": "UPS Worldwide Express",
+                    "international": true,
+                    "points": false
+                },
+                "54": {
+                    "name": "UPS Worldwide Express Plus",
+                    "international": true,
+                    "points": false
+                },
+                "72": {
+                    "name": "UPS Worldwide Economy DDP",
+                    "international": true,
+                    "points": false
+                },
+                "17": {
+                    "name": "UPS Worldwide Economy DDU",
+                    "international": true,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Sandbox uses UPS’s Customer Integration Environment (wwwcie.ups.com). Its labels are not valid for shipping.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "UPS app",
+                    "instructions": "Create an app at developer.ups.com, add the Authorization, Rating, Shipping, Tracking, Locator, Pickup and Address Validation products, and link your UPS account to it.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "clientId",
+                    "label": "Client ID",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "clientSecret",
+                    "label": "Client secret",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "accountNumber",
+                    "label": "UPS account number",
+                    "instructions": "The six-character shipper number labels are billed to. It also unlocks negotiated rates.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "A1B2C3",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Options",
+                    "instructions": "",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "boolean",
+                    "name": "negotiatedRates",
+                    "label": "Use negotiated rates",
+                    "instructions": "Ask UPS for your account’s contract rates. Accounts without them get published rates.",
+                    "required": false,
+                    "default": true,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "boolean",
+                    "name": "declareValue",
+                    "label": "Declare each parcel’s value",
+                    "instructions": "Buys UPS declared-value coverage above the included $100. UPS charges for it.",
+                    "required": false,
+                    "default": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "dutiesPayer",
+                    "label": "International duties and taxes",
+                    "options": {
+                        "recipient": "Recipient pays (DDU)",
+                        "sender": "Bill my UPS account (DDP)"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "recipient",
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        }
+    },
+    "usps": {
+        "usps": {
+            "class": "justinholtweb\\carrierusps\\carriers\\UspsCarrier",
+            "name": "USPS",
+            "region": "United States",
+            "description": "USPS prices, domestic and international labels, tracking, carrier pickups and Post Office locations, on the USPS APIs v3.",
+            "setupUrl": "https://developers.usps.com/getting-started",
+            "capabilities": {
+                "features": [
+                    "rates",
+                    "labels",
+                    "cancel",
+                    "reprint",
+                    "tracking",
+                    "points",
+                    "pickups",
+                    "returns",
+                    "addressValidation",
+                    "international",
+                    "multiPiece"
+                ],
+                "labelFormats": [
+                    "pdf-4x6",
+                    "zpl",
+                    "png"
+                ],
+                "pointsMode": "search",
+                "pointTypes": [
+                    "postOffice"
+                ],
+                "originCountries": [
+                    "US",
+                    "PR",
+                    "VI",
+                    "GU",
+                    "AS",
+                    "MP",
+                    "FM",
+                    "MH",
+                    "PW"
+                ],
+                "accessorials": [
+                    "signature",
+                    "adultSignature"
+                ],
+                "maxParcelWeightG": 31751,
+                "trackingBatchSize": 35,
+                "sandbox": true
+            },
+            "featureLabels": [
+                "Live rates",
+                "Labels",
+                "Void labels",
+                "Reprint",
+                "Tracking",
+                "Pickup points",
+                "Collections",
+                "Return labels",
+                "Address validation",
+                "International",
+                "Multi-piece"
+            ],
+            "services": {
+                "USPS_GROUND_ADVANTAGE": {
+                    "name": "USPS Ground Advantage",
+                    "international": false,
+                    "points": false
+                },
+                "PRIORITY_MAIL": {
+                    "name": "Priority Mail",
+                    "international": false,
+                    "points": false
+                },
+                "PRIORITY_MAIL_EXPRESS": {
+                    "name": "Priority Mail Express",
+                    "international": false,
+                    "points": false
+                },
+                "MEDIA_MAIL": {
+                    "name": "Media Mail",
+                    "international": false,
+                    "points": false
+                },
+                "USPS_GROUND_ADVANTAGE_HFP": {
+                    "name": "USPS Ground Advantage, Hold for Pickup",
+                    "international": false,
+                    "points": true
+                },
+                "PRIORITY_MAIL_HFP": {
+                    "name": "Priority Mail, Hold for Pickup",
+                    "international": false,
+                    "points": true
+                },
+                "PRIORITY_MAIL_EXPRESS_HFP": {
+                    "name": "Priority Mail Express, Hold for Pickup",
+                    "international": false,
+                    "points": true
+                },
+                "FIRST-CLASS_PACKAGE_INTERNATIONAL_SERVICE": {
+                    "name": "First-Class Package International Service",
+                    "international": true,
+                    "points": false
+                },
+                "PRIORITY_MAIL_INTERNATIONAL": {
+                    "name": "Priority Mail International",
+                    "international": true,
+                    "points": false
+                },
+                "PRIORITY_MAIL_EXPRESS_INTERNATIONAL": {
+                    "name": "Priority Mail Express International",
+                    "international": true,
+                    "points": false
+                }
+            },
+            "fields": [
+                {
+                    "type": "select",
+                    "name": "environment",
+                    "label": "Environment",
+                    "options": {
+                        "production": "Production",
+                        "sandbox": "Sandbox / test"
+                    },
+                    "instructions": "Sandbox uses USPS’s Testing Environment for Mailers (TEM). TEM labels are watermarked and not billed.",
+                    "required": false,
+                    "default": "production",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "clientId",
+                    "label": "Consumer Key",
+                    "instructions": "From your app on the USPS developer portal.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "clientSecret",
+                    "label": "Consumer Secret",
+                    "instructions": "Store this in an environment variable rather than in the database.",
+                    "required": true,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": true,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "heading",
+                    "name": "",
+                    "label": "Label payment",
+                    "instructions": "Labels are paid from an EPS (or permit) account linked in the USPS Business Customer Gateway. Rates, tracking and address checks work without these.",
+                    "required": false,
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "crid",
+                    "label": "CRID",
+                    "instructions": "Customer Registration ID, from the Business Customer Gateway.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "mid",
+                    "label": "MID",
+                    "instructions": "Mailer ID used for labels.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "manifestMid",
+                    "label": "Manifest MID",
+                    "instructions": "Leave blank to use the MID above.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "select",
+                    "name": "accountType",
+                    "label": "Payment account type",
+                    "options": {
+                        "EPS": "EPS (Enterprise Payment System)",
+                        "PERMIT": "Permit"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "EPS",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "text",
+                    "name": "accountNumber",
+                    "label": "Payment account number",
+                    "instructions": "The EPS account number, or the permit number.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "text",
+                    "name": "permitZip",
+                    "label": "Permit ZIP Code",
+                    "instructions": "Only for a permit account.",
+                    "required": false,
+                    "default": "",
+                    "placeholder": "",
+                    "secret": false,
+                    "suggestEnvVars": true
+                },
+                {
+                    "type": "select",
+                    "name": "priceType",
+                    "label": "Prices",
+                    "options": {
+                        "COMMERCIAL": "Commercial",
+                        "RETAIL": "Retail",
+                        "CONTRACT": "Contract (Negotiated Service Agreement)"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "COMMERCIAL",
+                    "secret": false,
+                    "suggestEnvVars": false
+                },
+                {
+                    "type": "select",
+                    "name": "pickupLocation",
+                    "label": "Where the carrier collects pickups",
+                    "options": {
+                        "FRONT_DOOR": "Front door",
+                        "BACK_DOOR": "Back door",
+                        "SIDE_DOOR": "Side door",
+                        "KNOCK_ON_DOOR": "Knock on door / ring bell",
+                        "MAIL_ROOM": "Mail room",
+                        "OFFICE": "Office",
+                        "RECEPTION": "Reception",
+                        "PORCH": "Porch",
+                        "MAILBOX": "Mailbox",
+                        "OTHER": "Other (see instructions)"
+                    },
+                    "instructions": "",
+                    "required": false,
+                    "default": "FRONT_DOOR",
+                    "secret": false,
+                    "suggestEnvVars": false
+                }
+            ]
+        }
+    }
+}

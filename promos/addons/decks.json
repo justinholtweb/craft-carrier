@@ -1,0 +1,338 @@
+{
+  "ups": {
+    "name": "UPS",
+    "slug": "ups",
+    "colour": "#5B3A1F",
+    "textColour": "#D9A877",
+    "tagline": "UPS, wired into Craft&nbsp;Commerce.",
+    "lede": "Live rates, labels, returns, tracking, Access Points, pickups and address validation &mdash; through the UPS OAuth REST APIs.",
+    "carriers": [
+      {
+        "handle": "ups",
+        "short": "UPS"
+      }
+    ],
+    "connect": "An app at developer.ups.com with your shipper account linked to it. Paste the client ID and secret, press <b>Test connection</b>, and a fresh token proves both.",
+    "traps": [
+      {
+        "title": "No PDF from the Ship API",
+        "body": "UPS draws GIF and ZPL. ZPL goes straight to a thermal printer; PNG is converted from UPS&rsquo;s GIF with GD, and is only offered when GD is installed."
+      },
+      {
+        "title": "Tokens that last an hour",
+        "body": "Cut from four hours on 1&nbsp;April 2026. Each token is cached and a new one fetched a minute before it expires."
+      },
+      {
+        "title": "One package per return",
+        "body": "UPS refuses multi-package returns from the US and Puerto Rico, so a multi-parcel return is stopped up front with a message saying why."
+      }
+    ],
+    "source": "the official UPS OpenAPI specifications (v2409)",
+    "sandbox": "UPS&rsquo;s Customer Integration Environment, with the same app",
+    "unverified": [
+      "The Ground Saver service codes 93 and 92",
+      "Tracking types beyond the documented D, I, M and X",
+      "The Access Point delivery address fields",
+      "The pickup request&rsquo;s service code"
+    ]
+  },
+  "fedex": {
+    "name": "FedEx",
+    "slug": "fedex",
+    "colour": "#4D148C",
+    "textColour": "#B993F2",
+    "tagline": "FedEx, wired into Craft&nbsp;Commerce.",
+    "lede": "Live rates, labels in four formats, returns, tracking, Hold at Location, pickups and address validation &mdash; through the FedEx REST APIs.",
+    "carriers": [
+      {
+        "handle": "fedex",
+        "short": "FedEx"
+      }
+    ],
+    "connect": "A project at developer.fedex.com with your account linked. The environment must match the keys &mdash; FedEx issues separate ones for its sandbox and for production.",
+    "traps": [
+      {
+        "title": "Ground is two services",
+        "body": "<code>FEDEX_GROUND</code> to a business, <code>GROUND_HOME_DELIVERY</code> to a home. The right one is sent for each address and reported under the service the method asked for."
+      },
+      {
+        "title": "Hold at Location, never residential",
+        "body": "A pickup-point method ships with Hold at Location for the counter the customer chose, and is never charged as a residential delivery."
+      },
+      {
+        "title": "Up to 40 packages, one shipment",
+        "body": "One tracking number and one label per package, under a master number that voids the whole shipment at once."
+      }
+    ],
+    "source": "the FedEx OpenAPI files and API Reference Guide",
+    "sandbox": "apis-sandbox.fedex.com, with its own keys &mdash; and production labels need FedEx&rsquo;s certification",
+    "unverified": [
+      "Where the currency sits in a rate answer (both places are read)",
+      "Hold at Location&rsquo;s <code>locationId</code> field",
+      "Which pickup fields are required",
+      "The current label-certification process"
+    ]
+  },
+  "usps": {
+    "name": "USPS",
+    "slug": "usps",
+    "colour": "#14204A",
+    "textColour": "#8FA3E8",
+    "tagline": "USPS, wired into Craft&nbsp;Commerce.",
+    "lede": "Prices, domestic, international and return labels, tracking, pickups and Hold for Pickup &mdash; on the USPS APIs v3, not the retired Web Tools.",
+    "carriers": [
+      {
+        "handle": "usps",
+        "short": "USPS"
+      }
+    ],
+    "connect": "A developer-portal app for the API calls, plus your CRID, MID and payment account from the Business Customer Gateway for labels. <b>Test</b> reads which APIs the app was granted.",
+    "traps": [
+      {
+        "title": "Labels need a second token",
+        "body": "A payment token minted from your CRID, MID and EPS account, cached per connection and per account &mdash; so a changed account never pays with the old one."
+      },
+      {
+        "title": "One package at a time",
+        "body": "USPS has no shipment grouping. If package 2 fails, package 1 is voided; if that void isn&rsquo;t clean, the shipment is uncertain and lists every number bought."
+      },
+      {
+        "title": "60 calls an hour",
+        "body": "USPS&rsquo;s default quota. Every class is priced in one call, once per distinct package &mdash; keep Carrier&rsquo;s rate cache on."
+      }
+    ],
+    "source": "the USPS OpenAPI specs and examples",
+    "sandbox": "TEM, where labels are watermarked and not billed",
+    "unverified": [
+      "The machinable thresholds (from the DMM, not the API spec)",
+      "Hold for Pickup on Priority Mail and Priority Mail Express",
+      "The account fields on the <code>LABEL_OWNER</code> payment role",
+      "Pub 199 tracking event codes"
+    ]
+  },
+  "freight": {
+    "name": "LTL Freight",
+    "slug": "freight",
+    "colour": "#B4531A",
+    "textColour": "#F29A62",
+    "tagline": "Six LTL carriers, wired into Craft&nbsp;Commerce.",
+    "lede": "TForce Freight, Old Dominion, Estes, XPO, R+L and SAIA &mdash; quotes, bills of lading, PRO tracking and, where the API allows, pickups.",
+    "carriers": [
+      {
+        "handle": "freight-tforce",
+        "short": "TForce"
+      },
+      {
+        "handle": "freight-odfl",
+        "short": "ODFL"
+      },
+      {
+        "handle": "freight-estes",
+        "short": "Estes"
+      },
+      {
+        "handle": "freight-xpo",
+        "short": "XPO"
+      },
+      {
+        "handle": "freight-rl",
+        "short": "R+L"
+      },
+      {
+        "handle": "freight-saia",
+        "short": "SAIA"
+      }
+    ],
+    "formCarrier": 0,
+    "connectHeading": "Six carriers, six sign-ins",
+    "connect": "Each carrier wants something different &mdash; Azure AD client credentials for TForce, a portal login for ODFL, three product keys for SAIA. Each connection asks for exactly its own.",
+    "traps": [
+      {
+        "title": "Freight class is a string",
+        "body": "&ldquo;77.5&rdquo; and &ldquo;92.50&rdquo; pass; &ldquo;77&rdquo; is refused. No class and no default? The shipment is refused, naming the handling unit. Nothing is guessed."
+      },
+      {
+        "title": "Residential only when you say so",
+        "body": "Taken from the residential accessorials &mdash; never from the address flag, which defaults to true at checkout and costs a fee on LTL."
+      },
+      {
+        "title": "A BOL without a PRO is uncertain",
+        "body": "A bill of lading accepted before a PRO is assigned is not a refusal. It waits for a person instead of a second BOL being bought."
+      }
+    ],
+    "source": "each carrier&rsquo;s published documentation",
+    "sandbox": "each carrier&rsquo;s test environment &mdash; R+L has none, and XPO only tests bills of lading",
+    "unverified": [
+      "SAIA&rsquo;s REST rating and tracking response shapes",
+      "The NMFTA eBOL party objects&rsquo; exact nesting",
+      "TForce&rsquo;s liftgate and limited-access codes",
+      "Pickups for Estes, XPO and R+L &mdash; not implemented, because the request bodies are undocumented"
+    ],
+    "trapsHeading": "It knows LTL&rsquo;s quirks"
+  },
+  "dpd": {
+    "name": "DPD",
+    "slug": "dpd",
+    "colour": "#B0173A",
+    "textColour": "#F2708C",
+    "tagline": "DPD EasyShip, wired into Craft&nbsp;Commerce.",
+    "lede": "DPD Croatia and DPD Slovenia through DPD&rsquo;s own EasyShip &mdash; labels, cash on delivery, parcel shops, collections and the daily manifest.",
+    "carriers": [
+      {
+        "handle": "dpd-easyship",
+        "short": "DPD"
+      }
+    ],
+    "connect": "Your EasyShip portal login &mdash; DPD issues no separate API key. That is easyship.hr or easyship.si, not the unrelated Easyship.com aggregator.",
+    "traps": [
+      {
+        "title": "Labels vanish after two minutes",
+        "body": "After that, EasyShip returns an empty PDF. The label is fetched in the same purchase that creates the parcel, and Carrier keeps those bytes."
+      },
+      {
+        "title": "No parcel-shop API",
+        "body": "Ask DPD for the PUDO list and import it as CSV. Imported points only change when you change them, and EasyShip&rsquo;s required fields are checked before sending."
+      },
+      {
+        "title": "House numbers kept apart",
+        "body": "&ldquo;Ilica 242a&rdquo; is split automatically and Croatian &ldquo;bb&rdquo; is understood. An address with no number is refused before anything is sent."
+      }
+    ],
+    "source": "DPD&rsquo;s EasyShip manual (v2.2, August 2025)",
+    "sandbox": "nothing: DPD documents no test system, and advises testing in production and deleting the parcel while it is unprinted",
+    "unverified": [
+      "What a late reprint&rsquo;s empty PDF looks like, byte for byte",
+      "What the COD split options do on multi-parcel shipments",
+      "Whether a printed but unsent parcel can be cancelled",
+      "Whether a parcel-shop collection shows as delivered"
+    ]
+  },
+  "gls": {
+    "name": "GLS",
+    "slug": "gls",
+    "colour": "#F2B705",
+    "textColour": "#F5CB4E",
+    "tagline": "GLS, wired into Craft&nbsp;Commerce.",
+    "lede": "MyGLS in Croatia, Hungary, Czechia, Romania, Slovenia, Slovakia and Serbia &mdash; labels, cash on delivery, shops and lockers, batch reprints and tracking.",
+    "carriers": [
+      {
+        "handle": "gls",
+        "short": "GLS"
+      }
+    ],
+    "connect": "The country your GLS contract is with &mdash; each runs its own MyGLS &mdash; and the username, password and client number you already use there.",
+    "traps": [
+      {
+        "title": "A wrong password answers 200",
+        "body": "MyGLS reports bad credentials inside a successful response. The connection test reads it and says &ldquo;MyGLS refused the username or password&rdquo;."
+      },
+      {
+        "title": "Lockers need three contacts",
+        "body": "GLS refuses parcel-shop and locker parcels without a name, phone and email, so all three are checked before anything is sent."
+      },
+      {
+        "title": "A picker that never empties",
+        "body": "Every shop and locker is synced daily from GLS&rsquo;s map feed. If the feed ever breaks, the last good sync is kept rather than an empty picker."
+      }
+    ],
+    "source": "GLS&rsquo;s published documentation and official sample code",
+    "sandbox": "the MyGLS test system, with separate test credentials from your local GLS office",
+    "unverified": [
+      "The parcel-shop point id taken from the map feed",
+      "Whether cash on delivery also needs a COD service code",
+      "Whether a multi-parcel shipment shares one ParcelId",
+      "The page size of MyGLS&rsquo;s Thermo PDF"
+    ]
+  },
+  "boxnow": {
+    "name": "BOX NOW",
+    "slug": "boxnow",
+    "colour": "#3E9B4F",
+    "textColour": "#74D488",
+    "tagline": "BOX NOW lockers, wired into Craft&nbsp;Commerce.",
+    "lede": "Greece, Cyprus, Bulgaria, Croatia and Slovenia &mdash; locker delivery, cash on delivery, labels, cancellation, tracking and the whole locker list.",
+    "carriers": [
+      {
+        "handle": "boxnow",
+        "short": "BOX NOW"
+      }
+    ],
+    "connect": "The partner client ID and secret BOX NOW issued for your country, and your warehouse id. Got the warehouse wrong? <b>Test</b> lists the right ones.",
+    "traps": [
+      {
+        "title": "An order number, once",
+        "body": "BOX NOW never accepts a number twice, even after a cancel. Carrier sends the reference plus a hash of the shipment, so a retry can&rsquo;t deliver twice."
+      },
+      {
+        "title": "Phones must be international",
+        "body": "National numbers are completed with the connection country&rsquo;s code. The PIN goes out by SMS and email, so name, phone and email are all required."
+      },
+      {
+        "title": "The smallest compartment that fits",
+        "body": "20&nbsp;kg a parcel and three compartment heights. The size is chosen from each parcel&rsquo;s own dimensions."
+      }
+    ],
+    "source": "the Partner API manual (v1.65) and BOX NOW&rsquo;s official HR+SI WordPress plugin",
+    "sandbox": "BOX NOW&rsquo;s stage environment",
+    "unverified": [
+      "Whether .si credentials work on the .hr host, and the reverse",
+      "The delivery request id&rsquo;s field name (both are read)",
+      "The PDF label&rsquo;s exact paper size",
+      "The full tracking event vocabulary"
+    ]
+  },
+  "posts": {
+    "name": "National Posts",
+    "slug": "posts",
+    "colour": "#E09A00",
+    "textColour": "#F5BF4C",
+    "tagline": "Four national posts, wired into Craft&nbsp;Commerce.",
+    "lede": "Hrvatska pošta, Pošta Slovenije, Magyar Posta and ELTA Courier &mdash; labels, cash on delivery, Paketomat and PostaPont points, tracking and the end-of-day close.",
+    "carriers": [
+      {
+        "handle": "posta-hr",
+        "short": "Hrvatska pošta"
+      },
+      {
+        "handle": "posta-hu",
+        "short": "Magyar Posta"
+      },
+      {
+        "handle": "posta-si",
+        "short": "Pošta Slovenije"
+      },
+      {
+        "handle": "elta",
+        "short": "ELTA"
+      }
+    ],
+    "formCarrier": 1,
+    "connectHeading": "A business contract each",
+    "connect": "None of these APIs is open to the public. Every post issues its own credentials with your contract, and each connection asks only for its own.",
+    "traps": [
+      {
+        "title": "Magyar Posta ships nothing until the day is closed",
+        "body": "Close the day from the connection and the posting list is stored. After that MPL can&rsquo;t void or reprint, so do both first."
+      },
+      {
+        "title": "Hrvatska pošta caps e-mail at 25 characters",
+        "body": "A longer address is left off and the shipment warns &mdash; cutting an address short would make it wrong."
+      },
+      {
+        "title": "No home-made labels for Pošta Slovenije",
+        "body": "Its API returns no label or tracking number, so the driver offers tracking and points only, never a label refused at the counter."
+      }
+    ],
+    "honestHeading": "Confidence, stated per post",
+    "honestLede": "Nothing here has run against a live account. Hrvatska pošta and Magyar Posta are checked against their own documentation (high confidence); Pošta Slovenije is low&ndash;medium and ELTA low.",
+    "source": "each post&rsquo;s published documentation, where it has any",
+    "sandbox": "each post&rsquo;s test system &mdash; Magyar Posta&rsquo;s is a mock, ELTA has a test account",
+    "unverified": [
+      "ELTA publishes no API documentation &mdash; verify before production",
+      "ELTA runs over plain HTTP on port 9003",
+      "Hrvatska pošta needs outbound ports 9000 and 9020",
+      "Pošta Slovenije&rsquo;s tracking response structure is unpublished"
+    ],
+    "trapsHeading": "It knows each post&rsquo;s quirks"
+  }
+}

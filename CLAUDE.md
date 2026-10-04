@@ -16,7 +16,7 @@ Each carrier is a separate **free add-on plugin** that registers carrier classes
 as `justinholtweb/craft-carrier`. Single edition, **$149 with a $129 renewal**. The model is
 Erpy's. Prompted by craft-shipper#1, from a merchant in south-east Europe.
 
-Plan: `docs/plan.md`. Add-on contract: `docs/carriers.md`. API research behind the add-ons:
+Plan: `docs/plan.md`. Add-on contract: `docs/writing-a-carrier.md`. API research behind the add-ons:
 `docs/research/`.
 
 ## Tech Stack

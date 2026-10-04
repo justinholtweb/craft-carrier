@@ -142,10 +142,10 @@ php craft carrier/points/import <connection> <file.csv>
 
 ## Writing a carrier
 
-See [`docs/carriers.md`](docs/carriers.md). An add-on is one class per carrier, registered on
+See [`docs/writing-a-carrier.md`](docs/writing-a-carrier.md). An add-on is one class per carrier, registered on
 `Carriers::EVENT_REGISTER_CARRIERS`. The conformance suite, `tests/integration/carriers.php`,
 must pass for it, at 0 failures.
 
 ## Licence
 
-Carrier is commercial: $149, with $129 a year for updates. The carrier add-ons are free.
+The Craft License. See [LICENSE.md](LICENSE.md). Carrier is commercial: $149, with $129 a year for updates, single edition. The carrier add-ons are free.

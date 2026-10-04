@@ -106,13 +106,31 @@ class PickupsController extends Controller
 
         $documents = $result->data['documents'] ?? [];
 
-        // A manifest the driver has to sign is the thing to hand back, not a flash message.
-        if ($documents !== []) {
+        // A manifest the driver has to sign is the thing to hand back, not a flash message. Some
+        // carriers return more than one (DPD adds a separate cash-on-delivery manifest), and
+        // every one of them goes in the van, so several come back as a ZIP.
+        if (count($documents) === 1) {
             $document = $documents[0];
 
             return $this->response->sendContentAsFile($document->data, 'manifest-' . date('Y-m-d') . '.' . LabelFormat::extension($document->format), [
                 'mimeType' => LabelFormat::mimeType($document->format),
             ]);
+        }
+
+        if ($documents !== []) {
+            $path = tempnam(sys_get_temp_dir(), 'carrier-manifest');
+            $zip = new \ZipArchive();
+            $zip->open($path, \ZipArchive::OVERWRITE);
+
+            foreach (array_values($documents) as $i => $document) {
+                $zip->addFromString(sprintf('manifest-%s-%d.%s', date('Y-m-d'), $i + 1, LabelFormat::extension($document->format)), $document->data);
+            }
+
+            $zip->close();
+            $data = (string)file_get_contents($path);
+            @unlink($path);
+
+            return $this->response->sendContentAsFile($data, 'manifests-' . date('Y-m-d') . '.zip', ['mimeType' => 'application/zip']);
         }
 
         $this->setSuccessFlash(Craft::t('carrier', 'Day closed.'));
