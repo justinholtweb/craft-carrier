@@ -71,7 +71,7 @@ class Tracking extends Component
             $connection = $group[0]->getConnection();
             $carrier = $connection?->getCarrier();
 
-            if (!$carrier || !$carrier::capabilities()->has(Feature::TRACKING)) {
+            if (!$carrier || !$connection->can(Feature::TRACKING)) {
                 foreach ($group as $shipment) {
                     $this->reschedule($shipment, null);
                 }

@@ -1,7 +1,7 @@
 {
     "name": "justinholtweb/craft-carrier",
     "description": "The shipping carrier gateway for Craft Commerce — live rates, labels, pickup points and tracking, with a free add-on for every carrier.",
-    "version": "5.0.0",
+    "version": "5.1.0",
     "type": "craft-plugin",
     "keywords": [
         "craftcms",

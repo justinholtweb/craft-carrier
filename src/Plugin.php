@@ -28,7 +28,7 @@ class Plugin extends BasePlugin
 
     public const HANDLE = 'carrier';
 
-    public string $schemaVersion = '5.0.0';
+    public string $schemaVersion = '5.1.0';
 
     public bool $hasCpSettings = true;
 

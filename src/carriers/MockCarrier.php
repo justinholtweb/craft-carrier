@@ -131,7 +131,7 @@ class MockCarrier extends Carrier
         return [
             'standard' => ['name' => 'Mock Standard', 'international' => true, 'points' => false],
             'express' => ['name' => 'Mock Express', 'international' => true, 'points' => false],
-            'locker' => ['name' => 'Mock Locker', 'international' => false, 'points' => true],
+            'locker' => ['name' => 'Mock Locker', 'international' => false, 'points' => true, 'pointTypes' => [PickupPoint::TYPE_LOCKER]],
         ];
     }
 

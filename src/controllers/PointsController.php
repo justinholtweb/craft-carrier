@@ -24,10 +24,14 @@ class PointsController extends Controller
     // =========================================================================
 
     /**
-     * `GET actions/carrier/points/search?method=boxnow-locker&postcode=10000` (or `lat`/`lng`).
+     * `GET actions/carrier/points/search?method=boxnowLocker&postcode=10000` (or `city`, or
+     * `lat`/`lng`).
      *
      * Anonymous, read-only, and cached per query. It only ever answers for an enabled method that
      * requires a point, so it cannot be used to enumerate arbitrary connections.
+     *
+     * The cart's shipping address is only a default: it is used when the request names no place at
+     * all. A shopper who types a town gets that town, not their cart's post code back.
      */
     public function actionSearch(): Response
     {
@@ -44,15 +48,19 @@ class PointsController extends Controller
         $address = $cart?->getShippingAddress();
         $lat = $this->request->getParam('lat');
         $lng = $this->request->getParam('lng');
+        [$postcode, $city] = self::place($this->request->getParam('postcode'), $this->request->getParam('city'), $lat, $lng, $address);
 
         $query = new PointQuery([
             'countryCode' => strtoupper((string)$this->request->getParam('country', $address?->countryCode ?? '')),
-            'postcode' => mb_substr(trim((string)$this->request->getParam('postcode', $address?->postalCode ?? '')), 0, 16),
-            'city' => mb_substr(trim((string)$this->request->getParam('city', $address?->locality ?? '')), 0, 64),
+            'postcode' => mb_substr($postcode, 0, 16),
+            'city' => mb_substr($city, 0, 64),
             'latitude' => is_numeric($lat) ? max(-90, min(90, (float)$lat)) : null,
             'longitude' => is_numeric($lng) ? max(-180, min(180, (float)$lng)) : null,
             'radiusKm' => max(1, min(50, (int)$this->request->getParam('radius', 10))),
             'limit' => max(1, min(50, (int)$this->request->getParam('limit', 20))),
+            // A locker-only method must not offer post offices: the label would go out as a locker
+            // shipment to a point that is not a locker.
+            'types' => $method->pointTypes(),
         ]);
 
         $points = $plugin->getPoints()->search($connection, $query);
@@ -84,6 +92,11 @@ class PointsController extends Controller
                 'label' => $p->label(),
             ], $points),
             'selected' => $selection?->pointId,
+            'method' => [
+                'handle' => $method->handle,
+                'name' => $method->name,
+                'logoUrl' => $method->getLogoUrl(),
+            ],
         ]);
     }
 
@@ -121,6 +134,25 @@ class PointsController extends Controller
         }
 
         return $this->asSuccess(Craft::t('carrier', 'Pickup point saved.'));
+    }
+
+    /**
+     * The postcode and town to search: what the shopper sent, or the cart's shipping address only
+     * when they sent no place at all. Either explicit field (or a position) beats the cart.
+     *
+     * @return array{0:string,1:string} postcode, city
+     */
+    public static function place(mixed $postcode, mixed $city, mixed $lat, mixed $lng, ?\craft\elements\Address $address): array
+    {
+        $postcode = trim((string)$postcode);
+        $city = trim((string)$city);
+
+        if ($postcode === '' && $city === '' && !(is_numeric($lat) && is_numeric($lng))) {
+            $postcode = trim((string)($address?->postalCode ?? ''));
+            $city = trim((string)($address?->locality ?? ''));
+        }
+
+        return [$postcode, $city];
     }
 
     private function cart(): ?\craft\commerce\elements\Order

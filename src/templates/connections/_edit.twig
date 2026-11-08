@@ -64,7 +64,7 @@
 
         {{ forms.lightswitchField({
             label: 'Enabled'|t('carrier'),
-            instructions: 'Required credentials are only checked once a connection is enabled, so you can save a half-finished setup.'|t('carrier'),
+            instructions: 'Required credentials are only checked once a connection is enabled, so you can save a half-finished setup. Fields marked as needed only for some features are checked when those are used.'|t('carrier'),
             id: 'enabled', name: 'enabled', on: connection.enabled
         }) }}
 
@@ -84,6 +84,18 @@
                 value: connection.settings.pointCountries ?? ''
             }) }}
         {% endif %}
+
+        {{ forms.elementSelectField({
+            label: 'Logo'|t('carrier'),
+            instructions: 'Shown next to this connection’s methods at checkout, unless a method has its own.'|t('carrier'),
+            id: 'logoId',
+            name: 'logoId',
+            elementType: 'craft\\elements\\Asset',
+            elements: connection.getLogo() ? [connection.getLogo()] : [],
+            limit: 1,
+            criteria: { kind: ['image'] },
+            viewMode: 'large'
+        }) }}
 
         {% if labelFormatOptions %}
             {{ forms.selectField({

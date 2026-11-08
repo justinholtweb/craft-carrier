@@ -51,6 +51,38 @@
         errors: method.getErrors('requiresPoint')
     }) }}
 
+    {# Point types per connection: only the types the carrier has, defaulting to the service's. #}
+    {% for connectionId, carrier in carriers %}
+        {% set typeOptions = [] %}
+        {% for type in carrier.capabilities.pointTypes ?? [] %}
+            {% set typeOptions = typeOptions|merge([{ label: pointTypeLabels[type] ?? type, value: type }]) %}
+        {% endfor %}
+        {% if typeOptions|length > 1 %}
+            <div class="carrier-extras" data-connection="{{ connectionId }}" {% if method.connectionId != connectionId %}hidden{% endif %}>
+                {{ forms.checkboxSelectField({
+                    label: 'Pickup point types'|t('carrier'),
+                    instructions: 'Which kinds of point the customer can choose. Leave all unticked to use what the service delivers to.'|t('carrier'),
+                    id: 'pointTypes-' ~ connectionId,
+                    name: 'conditions[pointTypes]',
+                    options: typeOptions,
+                    values: method.conditions.pointTypes ?? []
+                }) }}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    {{ forms.elementSelectField({
+        label: 'Logo'|t('carrier'),
+        instructions: 'Shown next to the method at checkout, as `method.logo`. Leave blank to use the connection’s logo.'|t('carrier'),
+        id: 'logoId',
+        name: 'logoId',
+        elementType: 'craft\\elements\\Asset',
+        elements: method.getOwnLogo() ? [method.getOwnLogo()] : [],
+        limit: 1,
+        criteria: { kind: ['image'] },
+        viewMode: 'large'
+    }) }}
+
     <hr>
     <h2>{{ 'Price'|t('carrier') }}</h2>
     {% set pricing = method.pricing %}

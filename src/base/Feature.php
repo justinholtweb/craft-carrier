@@ -79,6 +79,17 @@ final class Feature
         ];
     }
 
+    /**
+     * Every feature but these — for a credential field that everything except, say, a public
+     * point feed needs: `'requiredFor' => Feature::allExcept(Feature::POINTS)`.
+     *
+     * @return string[]
+     */
+    public static function allExcept(string ...$features): array
+    {
+        return array_values(array_diff(self::all(), $features));
+    }
+
     public static function label(string $feature): string
     {
         return match ($feature) {

@@ -40,6 +40,12 @@ class CarrierShippingMethod extends ShippingMethod
         return $this->method?->getShippingMethodHandle() ?? 'carrier';
     }
 
+    /** The method's checkout logo, else its connection's. */
+    public function getLogo(): ?\craft\elements\Asset
+    {
+        return $this->method?->getLogo();
+    }
+
     public function getCpEditUrl(): string
     {
         return $this->method?->getCpEditUrl() ?? '';

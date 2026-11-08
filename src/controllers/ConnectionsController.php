@@ -102,6 +102,11 @@ class ConnectionsController extends Controller
 
         $connection->enabled = (bool)$this->request->getBodyParam('enabled', false);
         $connection->labelFormat = (string)$this->request->getBodyParam('labelFormat', '');
+
+        if ($this->request->getBodyParam('logoId') !== null) {
+            $connection->logoId = (int)(((array)$this->request->getBodyParam('logoId'))[0] ?? 0) ?: null;
+        }
+
         $connection->settings = array_merge($connection->settings, (array)$this->request->getBodyParam('settings', []));
         $connection->shipFrom = array_map('strval', (array)$this->request->getBodyParam('shipFrom', []));
 

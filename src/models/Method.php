@@ -4,11 +4,13 @@ namespace justinholtweb\carrier\models;
 
 use Craft;
 use craft\base\Model;
+use craft\elements\Asset;
 use craft\helpers\UrlHelper;
 use craft\validators\HandleValidator;
 use craft\validators\UniqueValidator;
 use DateTime;
 use justinholtweb\carrier\base\Feature;
+use justinholtweb\carrier\models\canonical\PickupPoint;
 use justinholtweb\carrier\Plugin;
 use justinholtweb\carrier\records\MethodRecord;
 
@@ -51,9 +53,12 @@ class Method extends Model
 
     /**
      * `countries`, `excludeCountries`, `minWeight`, `maxWeight` (store weight units),
-     * `minSubtotal`, `maxSubtotal`.
+     * `minSubtotal`, `maxSubtotal`, `pointTypes` (overrides the service's point types).
      */
     public array $conditions = [];
+
+    /** An asset shown next to the method at checkout. Null falls back to the connection's. */
+    public ?int $logoId = null;
 
     /**
      * `strategy`: '' (use the plugin setting) | single | perItem | boxes. For freight methods also
@@ -82,6 +87,10 @@ class Method extends Model
 
         $config['serviceCode'] = (string)($config['serviceCode'] ?? '');
 
+        if (array_key_exists('logoId', $config)) {
+            $config['logoId'] = (int)$config['logoId'] ?: null;
+        }
+
         parent::__construct($config);
     }
 
@@ -92,7 +101,7 @@ class Method extends Model
             [['name', 'handle', 'serviceCode'], 'string', 'max' => 255],
             [['handle'], HandleValidator::class, 'reservedWords' => ['id', 'uid', 'new']],
             [['handle'], UniqueValidator::class, 'targetClass' => MethodRecord::class],
-            [['storeId', 'connectionId'], 'integer'],
+            [['storeId', 'connectionId', 'logoId'], 'integer'],
             [['enabled', 'requiresPoint'], 'boolean'],
             [['pricing'], 'validatePricing'],
         ];
@@ -123,6 +132,60 @@ class Method extends Model
     public function getConnection(): ?Connection
     {
         return $this->connectionId ? Plugin::getInstance()->getConnections()->getById($this->connectionId) : null;
+    }
+
+    /**
+     * The `PickupPoint::TYPE_*` values this method delivers to. Empty means any.
+     *
+     * The merchant's choice on the method wins; otherwise the carrier's service definition says
+     * (`'pointTypes' => [...]` in `services()`), so a Paketomat service only lists Paketomats.
+     *
+     * @return string[]
+     */
+    public function pointTypes(): array
+    {
+        $chosen = array_values(array_filter(
+            (array)($this->conditions['pointTypes'] ?? []),
+            static fn($t) => is_string($t) && array_key_exists($t, PickupPoint::typeLabels()),
+        ));
+
+        if ($chosen !== []) {
+            return $chosen;
+        }
+
+        $class = $this->getConnection()?->getCarrierClass();
+        $service = $class ? ($class::services()[$this->serviceCode] ?? []) : [];
+
+        return array_values(array_filter((array)($service['pointTypes'] ?? []), 'is_string'));
+    }
+
+    /**
+     * The logo to show at checkout: the method's own, else its connection's.
+     */
+    public function getLogo(): ?Asset
+    {
+        if ($this->logoId) {
+            $asset = Asset::find()->id($this->logoId)->status(null)->one();
+
+            if ($asset) {
+                return $asset;
+            }
+        }
+
+        return $this->getConnection()?->getLogo();
+    }
+
+    /**
+     * Only the method's own logo, for the edit screen.
+     */
+    public function getOwnLogo(): ?Asset
+    {
+        return $this->logoId ? Asset::find()->id($this->logoId)->status(null)->one() : null;
+    }
+
+    public function getLogoUrl(): ?string
+    {
+        return $this->getLogo()?->getUrl();
     }
 
     public function pricingMode(): string

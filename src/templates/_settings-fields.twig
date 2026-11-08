@@ -3,6 +3,9 @@
 
 {% for field in fields %}
     {% set value = values[field.name] ?? field.default ?? '' %}
+    {% if field.required and field.requiredFor ?? [] and 'points' not in field.requiredFor %}
+        {% set field = field|merge({ instructions: (field.instructions ? field.instructions|t('carrier') ~ ' ' : '') ~ 'Not needed for pickup points.'|t('carrier') }) %}
+    {% endif %}
     {% set name = prefix ~ '[' ~ field.name ~ ']' %}
     {% set id = prefix ~ '-' ~ field.name %}
 

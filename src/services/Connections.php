@@ -101,6 +101,7 @@ class Connections extends Component
         $record->setAttribute('carrier', $connection->carrier);
         $record->setAttribute('enabled', $connection->enabled);
         $record->setAttribute('labelFormat', $connection->labelFormat ?: null);
+        $record->setAttribute('logoId', $connection->logoId);
         $record->setAttribute('shipFrom', json_encode($connection->shipFrom));
 
         // A blank secret posted from the form means "leave it alone". The CP never sends a saved

@@ -38,8 +38,15 @@ Extend `justinholtweb\carrier\base\Carrier`. Implement these:
   that is declared but not implemented, and one that is implemented but not declared.
 - `settingsFields()` uses `base\Field`. Mark every credential `Field::secret()`. Use
   `Field::environment()` for a production/sandbox switch; `Carrier::isSandbox()` reads it.
+  A `'required' => true` field blocks enabling the connection. If only some features need it
+  (say your point feed is public), add `'requiredFor' => [Feature::LABELS, …]` instead. The
+  connection can then be enabled without the field, and the engine refuses those features until it
+  is filled in. Make sure such a feature never sends credentials: pass `['auth' => false]` to the
+  transport for a public feed.
 - `services()` returns `['code' => ['name' => …, 'international' => bool, 'points' => bool]]`.
-  Set `points: true` for a service that delivers to a pickup point.
+  Set `points: true` for a service that delivers to a pickup point. If the service reaches only
+  some kinds of point, add `'pointTypes' => [PickupPoint::TYPE_LOCKER]`; the picker then lists
+  only those, and selecting any other kind is refused.
 - `trackingUrl($number)` returns the carrier's public tracking page as https, or null.
 - `probe()` is the cheapest authenticated request available. Return
   `HealthResult::pass('Connected as …', [...details])` or `fail()` with a hint the merchant can act on.

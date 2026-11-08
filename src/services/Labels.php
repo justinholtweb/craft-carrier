@@ -139,6 +139,11 @@ class Labels extends Component
             return $this->refuse($shipment, Craft::t('carrier', '{carrier} cannot create labels.', ['carrier' => $carrier::displayName()]));
         }
 
+        // The carrier is never called, so nothing was created and `failed` is the truth.
+        if (($error = $connection->credentialsError(Feature::LABELS)) !== null) {
+            return $this->refuse($shipment, $error);
+        }
+
         try {
             $request = Plugin::getInstance()->getOrders()->buildRequest($order, $method, $connection, $options['parcels'] ?? null, 'label');
         } catch (Throwable $e) {
@@ -394,7 +399,7 @@ class Labels extends Component
         $connection = $shipment->getConnection();
         $carrier = $connection?->getCarrier();
 
-        if (!$carrier || !$carrier::capabilities()->has(Feature::CANCEL)) {
+        if (!$carrier || !$connection->can(Feature::CANCEL)) {
             $shipment->addError('status', Craft::t('carrier', 'This carrier cannot void labels through its API. Void it in the carrier’s portal, then mark it voided here.'));
 
             return false;
@@ -527,7 +532,7 @@ class Labels extends Component
     {
         $carrier = $shipment->getConnection()?->getCarrier();
 
-        if (!$carrier || !$carrier::capabilities()->has(Feature::REPRINT)) {
+        if (!$carrier || !$shipment->getConnection()->can(Feature::REPRINT)) {
             return false;
         }
 
@@ -625,7 +630,7 @@ class Labels extends Component
         $carrier = $shipments[0]->getConnection()?->getCarrier();
         $format = (string)$shipments[0]->labelFormat;
 
-        if (!$carrier || !$carrier::capabilities()->has(Feature::REPRINT) || !LabelFormat::isPdf($format)) {
+        if (!$carrier || !$shipments[0]->getConnection()->can(Feature::REPRINT) || !LabelFormat::isPdf($format)) {
             return null;
         }
 

@@ -46,6 +46,9 @@ class Connection extends Model
 
     public ?DateTime $pointsSyncedAt = null;
 
+    /** An asset shown next to this connection's methods at checkout, unless a method has its own. */
+    public ?int $logoId = null;
+
     public ?int $sortOrder = null;
 
     public ?DateTime $dateCreated = null;
@@ -64,6 +67,10 @@ class Connection extends Model
 
         $config['labelFormat'] = (string)($config['labelFormat'] ?? '');
 
+        if (array_key_exists('logoId', $config)) {
+            $config['logoId'] = (int)$config['logoId'] ?: null;
+        }
+
         parent::__construct($config);
     }
 
@@ -75,6 +82,7 @@ class Connection extends Model
             [['handle'], HandleValidator::class, 'reservedWords' => ['id', 'uid', 'new']],
             [['handle'], UniqueValidator::class, 'targetClass' => ConnectionRecord::class],
             [['enabled'], 'boolean'],
+            [['logoId'], 'integer'],
             [['carrier'], 'validateCarrier'],
             [['labelFormat'], 'validateLabelFormat'],
             [['settings'], 'validateSettings'],
@@ -104,24 +112,86 @@ class Connection extends Model
     /**
      * Required credentials are enforced only when the connection is switched on, so a merchant
      * can save half a setup and come back with the missing key.
+     *
+     * Only the fields every feature needs block enabling. A field marked `requiredFor` (say,
+     * label credentials on a carrier whose point feed is public) is checked when that feature is
+     * used instead, so a shop can run the locker picker before its contract is signed.
      */
     public function validateSettings(): void
     {
-        $class = $this->getCarrierClass();
-
-        if (!$this->enabled || !$class) {
+        if (!$this->enabled || !$this->getCarrierClass()) {
             return;
         }
 
-        foreach ($class::settingsFields() as $field) {
+        foreach ($this->missingCredentials() as $label) {
+            $this->addError('settings', Craft::t('carrier', '“{field}” is required before this connection can be enabled.', [
+                'field' => $label,
+            ]));
+        }
+    }
+
+    /**
+     * The labels of required settings that are still blank.
+     *
+     * With no feature, only the fields every feature needs. With one, also the fields marked as
+     * needed for it.
+     *
+     * @return string[]
+     */
+    public function missingCredentials(?string $feature = null): array
+    {
+        $class = $this->getCarrierClass();
+        $missing = [];
+
+        foreach ($class ? $class::settingsFields() : [] as $field) {
             $name = $field['name'] ?? '';
 
-            if (($field['required'] ?? false) && $name !== '' && trim((string)($this->settings[$name] ?? '')) === '') {
-                $this->addError('settings', Craft::t('carrier', '“{field}” is required before this connection can be enabled.', [
-                    'field' => $field['label'] ?? $name,
-                ]));
+            if ($name === '' || !Field::isRequiredFor($field, $feature)) {
+                continue;
+            }
+
+            if (trim((string)($this->settings[$name] ?? '')) === '') {
+                $missing[] = (string)($field['label'] ?? $name);
             }
         }
+
+        return $missing;
+    }
+
+    /**
+     * Whether this connection can do something right now: its carrier declares the feature and
+     * every credential the feature needs is filled in.
+     */
+    public function can(string $feature): bool
+    {
+        $class = $this->getCarrierClass();
+
+        return $class !== null
+            && $class::capabilities()->has($feature)
+            && $this->missingCredentials($feature) === [];
+    }
+
+    /**
+     * The sentence a merchant sees when a feature is unavailable for want of credentials, or null.
+     */
+    public function credentialsError(string $feature): ?string
+    {
+        $missing = $this->missingCredentials($feature);
+
+        if ($missing === []) {
+            return null;
+        }
+
+        return Craft::t('carrier', '{connection} needs {fields} before it can be used for {feature}.', [
+            'connection' => $this->name ?: $this->handle,
+            'fields' => implode(', ', array_map(static fn($l) => '“' . $l . '”', $missing)),
+            'feature' => mb_strtolower(\justinholtweb\carrier\base\Feature::label($feature)),
+        ]);
+    }
+
+    public function getLogo(): ?\craft\elements\Asset
+    {
+        return $this->logoId ? \craft\elements\Asset::find()->id($this->logoId)->status(null)->one() : null;
     }
 
     /**

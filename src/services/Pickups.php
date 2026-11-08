@@ -33,6 +33,10 @@ class Pickups extends Component
             return ActionResult::failed(Craft::t('carrier', 'This carrier does not take collection requests through its API.'));
         }
 
+        if (($error = $connection->credentialsError(Feature::PICKUPS)) !== null) {
+            return ActionResult::failed($error);
+        }
+
         $address = $connection->getShipFromAddress();
 
         if (!$address && $shipments !== []) {
@@ -81,6 +85,10 @@ class Pickups extends Component
 
         if (!$carrier || !$carrier::capabilities()->has(Feature::CLOSE_DAY)) {
             return ActionResult::failed(Craft::t('carrier', 'This carrier has no end-of-day close.'));
+        }
+
+        if (($error = $connection->credentialsError(Feature::CLOSE_DAY)) !== null) {
+            return ActionResult::failed($error);
         }
 
         $shipments = array_values(array_filter(

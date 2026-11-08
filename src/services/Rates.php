@@ -70,6 +70,10 @@ class Rates extends Component
             return RateResult::failed(Craft::t('carrier', 'This carrier has no live rates.'));
         }
 
+        if (($error = $connection->credentialsError(Feature::RATES)) !== null) {
+            return RateResult::failed($error);
+        }
+
         $request = Plugin::getInstance()->getOrders()->buildRequest($order, null, $connection, $parcels, 'preview');
         $request->serviceCode = '';
 
@@ -190,6 +194,12 @@ class Rates extends Component
         }
 
         $connection = $method->getConnection();
+
+        // A points-only connection has no rate credentials yet: charge the fallback, never call.
+        if (($error = $connection->credentialsError(Feature::RATES)) !== null) {
+            return $this->fallback($method, $error);
+        }
+
         $carrier = $connection->getCarrier();
         $request = Plugin::getInstance()->getOrders()->buildRequest($order, $method, $connection, null, 'rate');
         $result = $carrier->rate($request);

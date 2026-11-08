@@ -72,6 +72,7 @@ class MethodsController extends Controller
             'stores' => $stores,
             'weightUnit' => $commerce->getSettings()->weightUnits,
             'accessorialLabels' => \justinholtweb\carrier\base\Accessorial::labels(),
+            'pointTypeLabels' => \justinholtweb\carrier\models\canonical\PickupPoint::typeLabels(),
             'currency' => $commerce->getStores()->getPrimaryStore()->getCurrency()->getCode(),
         ]);
     }
@@ -95,6 +96,7 @@ class MethodsController extends Controller
         $method->serviceCode = (string)$this->request->getBodyParam('serviceCode', '');
         $method->requiresPoint = (bool)$this->request->getBodyParam('requiresPoint');
         $method->enabled = (bool)$this->request->getBodyParam('enabled');
+        $method->logoId = (int)(((array)$this->request->getBodyParam('logoId', []))[0] ?? 0) ?: null;
 
         $pricing = (array)$this->request->getBodyParam('pricing', []);
         $pricing['table'] = array_values(array_filter(
@@ -112,6 +114,7 @@ class MethodsController extends Controller
                 : array_values(array_filter(array_map('trim', explode(',', strtoupper((string)$value)))));
         }
 
+        $conditions['pointTypes'] = array_values(array_filter((array)($conditions['pointTypes'] ?? [])));
         $method->conditions = $conditions;
         $method->packing = (array)$this->request->getBodyParam('packing', []);
 

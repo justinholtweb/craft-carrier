@@ -16,6 +16,7 @@ use Twig\Markup;
  * `craft.carrier` — what a storefront template needs.
  *
  *     {{ craft.carrier.pointPicker(cart) }}
+ *     {% set logo = craft.carrier.byHandle(option.handle).logo ?? null %}
  *     {% for shipment in craft.carrier.shipments(order) %}
  *         <a href="{{ shipment.trackingUrl }}">{{ shipment.trackingNumber }}</a>
  *         {{ shipment.trackingStatusLabel }}
@@ -64,6 +65,22 @@ class CarrierVariable
     public function method(Order $order): ?Method
     {
         return Plugin::getInstance()->getMethods()->getByShippingMethodHandle($order->shippingMethodHandle);
+    }
+
+    /**
+     * A method by its handle, or by the `carrier-…` handle Commerce puts on a shipping option —
+     * so a checkout loop can show each option's logo:
+     *
+     *     {% for handle, option in cart.availableShippingMethodOptions %}
+     *         {% set logo = craft.carrier.byHandle(handle).logo ?? null %}
+     *         {% if logo %}<img src="{{ logo.url }}" alt="">{% endif %}
+     *     {% endfor %}
+     */
+    public function byHandle(?string $handle): ?Method
+    {
+        $methods = Plugin::getInstance()->getMethods();
+
+        return $methods->getByShippingMethodHandle($handle) ?? ($handle !== null ? $methods->getByHandle($handle) : null);
     }
 
     /**

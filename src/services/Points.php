@@ -46,6 +46,10 @@ class Points extends Component
             return ['count' => 0, 'error' => Craft::t('carrier', 'This carrier has no point list to sync.')];
         }
 
+        if (($error = $connection->credentialsError(Feature::POINTS)) !== null) {
+            return ['count' => 0, 'error' => $error];
+        }
+
         $countries = $countries ?: $this->countriesFor($connection);
         $startedAt = new DateTime();
         $count = 0;
@@ -150,7 +154,11 @@ class Points extends Component
             return [];
         }
 
-        $points = $this->withDistance($page->points, $query);
+        // A live carrier may ignore the type filter; never show a point the method cannot ship to.
+        $points = $this->withDistance(array_filter(
+            $page->points,
+            static fn(PickupPoint $p) => $query->types === [] || in_array($p->type, $query->types, true),
+        ), $query);
         Craft::$app->getCache()->set($key, array_map(static fn(PickupPoint $p) => $p->toArray(), $points), 3600);
 
         return $points;

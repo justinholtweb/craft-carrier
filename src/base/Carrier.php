@@ -163,10 +163,14 @@ abstract class Carrier implements CarrierInterface
         );
 
         if (($auth !== null && !$auth->isConfigured()) || $missing !== []) {
-            return HealthResult::fail(
-                Craft::t('carrier', 'Credentials are incomplete.'),
-                [Craft::t('carrier', 'Fill in every required field above, then save before testing.')],
-            );
+            $hints = [Craft::t('carrier', 'Fill in every required field above, then save before testing.')];
+
+            // A points-only setup is legitimate: say what already works without the rest.
+            if (static::capabilities()->has(Feature::POINTS) && $this->connection->missingCredentials(Feature::POINTS) === []) {
+                $hints[] = Craft::t('carrier', 'Pickup points work without these. Everything else needs them.');
+            }
+
+            return HealthResult::fail(Craft::t('carrier', 'Credentials are incomplete.'), $hints);
         }
 
         try {

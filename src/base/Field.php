@@ -157,19 +157,41 @@ abstract class Field
     }
 
     /**
-     * Field names that must be filled in before a connection can be enabled.
+     * Field names that must be filled in.
+     *
+     * A required field can say which features need it with `'requiredFor' => [Feature::LABELS, …]`
+     * (or `Feature::allExcept(Feature::POINTS)` for a carrier whose point feed is public). Without
+     * `requiredFor` a field is needed for everything.
+     *
+     * `$feature` null asks for the fields that block enabling a connection: only the ones needed
+     * for everything. A feature asks for those plus the ones needed for that feature. `'*'` asks
+     * for every required field, whatever it is for — what a connection test checks.
      */
-    public static function requiredNames(array $fields): array
+    public static function requiredNames(array $fields, ?string $feature = '*'): array
     {
         $names = [];
 
         foreach ($fields as $field) {
-            if (($field['required'] ?? false) && ($field['name'] ?? '') !== '') {
+            if (($field['name'] ?? '') !== '' && self::isRequiredFor($field, $feature)) {
                 $names[] = $field['name'];
             }
         }
 
         return $names;
+    }
+
+    /**
+     * @see requiredNames() for what `$feature` means
+     */
+    public static function isRequiredFor(array $field, ?string $feature): bool
+    {
+        if (!($field['required'] ?? false)) {
+            return false;
+        }
+
+        $for = (array)($field['requiredFor'] ?? []);
+
+        return $for === [] || $feature === '*' || ($feature !== null && in_array($feature, $for, true));
     }
 
     public static function defaults(array $fields): array

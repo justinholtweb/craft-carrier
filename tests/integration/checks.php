@@ -27,6 +27,8 @@ use craft\db\Query;
 use craft\helpers\Db;
 use justinholtweb\carrier\base\Capabilities;
 use justinholtweb\carrier\base\Feature;
+use justinholtweb\carrier\base\Field;
+use justinholtweb\carrier\controllers\PointsController;
 use justinholtweb\carrier\base\Response;
 use justinholtweb\carrier\base\ShipmentResult;
 use justinholtweb\carrier\base\TrackingStatus;
@@ -937,6 +939,65 @@ try {
     });
 
     check('the payment guard is registered', fn() => (new craft\commerce\services\Payments())->hasEventHandlers(craft\commerce\services\Payments::EVENT_BEFORE_PROCESS_PAYMENT) || yii\base\Event::hasHandlers(craft\commerce\services\Payments::class, craft\commerce\services\Payments::EVENT_BEFORE_PROCESS_PAYMENT));
+
+    check('a locker service lists only lockers, and a shop cannot be chosen for it', function() use ($selections, $pointCart, $lockerMethod) {
+        return $lockerMethod->pointTypes() === [PickupPoint::TYPE_LOCKER]
+            && $selections->select($pointCart, $lockerMethod, 'HR-S001') === null
+            ?: json_encode($lockerMethod->pointTypes());
+    });
+
+    check('the merchant’s point types on a method override the service’s', function() use ($mock, $points) {
+        $shops = makeMethod($mock, 'carshops' . substr(md5((string)microtime()), 0, 4), ['mode' => 'flat', 'flatRate' => 2], [
+            'serviceCode' => 'locker', 'requiresPoint' => true, 'conditions' => ['pointTypes' => [PickupPoint::TYPE_SHOP]],
+        ]);
+        $found = $points->search($mock, new PointQuery(['countryCode' => 'HR', 'types' => $shops->pointTypes(), 'limit' => 50]));
+
+        return $found !== [] && count(array_filter($found, fn($p) => $p->type !== PickupPoint::TYPE_SHOP)) === 0;
+    });
+
+    check('a typed town or post code beats the cart’s address; nothing typed uses the cart', function() {
+        $address = new craft\elements\Address(['postalCode' => '43000', 'locality' => 'Bjelovar', 'countryCode' => 'HR']);
+        $c = PointsController::class;
+
+        return $c::place(null, 'Split', null, null, $address) === ['', 'Split']
+            && $c::place('21000', null, null, null, $address) === ['21000', '']
+            && $c::place(null, null, '45.8', '15.9', $address) === ['', '']
+            && $c::place('', '', null, null, $address) === ['43000', 'Bjelovar']
+            ?: json_encode($c::place(null, 'Split', null, null, $address));
+    });
+
+    check('a field required only for some features does not block enabling, and gates those features', function() {
+        $fields = [
+            Field::text('always', 'Always', ['required' => true]),
+            Field::text('labelsOnly', 'Labels only', ['required' => true, 'requiredFor' => Feature::allExcept(Feature::POINTS)]),
+        ];
+
+        return Field::requiredNames($fields, null) === ['always']
+            && Field::requiredNames($fields, Feature::POINTS) === ['always']
+            && Field::requiredNames($fields, Feature::LABELS) === ['always', 'labelsOnly']
+            && Field::requiredNames($fields) === ['always', 'labelsOnly'];
+    });
+
+    if (Plugin::getInstance()->getCarriers()->has('gls')) {
+        check('GLS: a points-only connection enables, lists points, and refuses a label without calling GLS', function() use ($labels, $light) {
+            $gls = makeConnection('cargls' . substr(md5((string)microtime()), 0, 4), [], ['carrier' => 'gls', 'settings' => ['country' => 'hr']]);
+            $order = makeOrder([[$light, 1]]);
+            $s = $labels->purchase($order, $gls, null, ['claimKey' => 'points-only-' . $gls->id]);
+
+            return $gls->enabled && $gls->can(Feature::POINTS) && !$gls->can(Feature::LABELS)
+                && $s->status === Shipment::STATUS_FAILED && str_contains((string)$s->error, 'MyGLS username')
+                ?: $s->status . ': ' . $s->error;
+        });
+    }
+
+    check('a method with no logo of its own and none on the connection has none; Twig finds it by either handle', function() use ($lockerMethod) {
+        $twig = new justinholtweb\carrier\twig\CarrierVariable();
+
+        return $lockerMethod->getLogo() === null && $lockerMethod->getLogoUrl() === null
+            && $twig->byHandle($lockerMethod->getShippingMethodHandle())?->id === $lockerMethod->id
+            && $twig->byHandle($lockerMethod->handle)?->id === $lockerMethod->id
+            && $twig->byHandle('carrier-nope') === null;
+    });
 
     $storePickup = makeConnection("carstore$suffix", [], ['carrier' => 'store-pickup', 'settings' => ['locationHandles' => 'default, tidewaterSwansboro'], 'labelFormat' => LabelFormat::PDF_A6, 'shipFrom' => []]);
 

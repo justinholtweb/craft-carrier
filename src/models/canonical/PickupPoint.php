@@ -12,6 +12,19 @@ class PickupPoint extends Document
     public const TYPE_POST_OFFICE = 'postOffice';
     public const TYPE_STORE = 'store';
 
+    /**
+     * @return array<string,string> type => merchant-facing label
+     */
+    public static function typeLabels(): array
+    {
+        return [
+            self::TYPE_LOCKER => \Craft::t('carrier', 'Lockers'),
+            self::TYPE_SHOP => \Craft::t('carrier', 'Parcel shops'),
+            self::TYPE_POST_OFFICE => \Craft::t('carrier', 'Post offices'),
+            self::TYPE_STORE => \Craft::t('carrier', 'Store counters'),
+        ];
+    }
+
     /** The carrier's own id, which is what goes on the shipment. */
     public string $id = '';
 

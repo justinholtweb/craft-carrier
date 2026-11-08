@@ -124,6 +124,7 @@ class Methods extends Component
             'pricing' => json_encode($method->pricing),
             'conditions' => json_encode($method->conditions),
             'packing' => json_encode($method->packing),
+            'logoId' => $method->logoId,
             'enabled' => $method->enabled,
         ], false);
 

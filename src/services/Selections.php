@@ -36,8 +36,8 @@ class Selections extends Component
     }
 
     /**
-     * Choose a point for a cart. The point must exist for the method's connection — a customer
-     * cannot post an arbitrary id and have it printed on a label.
+     * Choose a point for a cart. The point must exist for the method's connection, and be of a type
+     * the method delivers to — a customer cannot post an arbitrary id and have it printed on a label.
      */
     public function select(Order $order, Method $method, string $pointId): ?Selection
     {
@@ -50,7 +50,10 @@ class Selections extends Component
         $point = Plugin::getInstance()->getPoints()->find($connection, $pointId)
             ?? $this->fromRecentSearch($connection->id, $pointId);
 
-        if (!$point) {
+        // A locker-only method cannot be pointed at a post office by posting its id directly.
+        $types = $method->pointTypes();
+
+        if (!$point || ($types !== [] && !in_array($point->type, $types, true))) {
             return null;
         }
 
